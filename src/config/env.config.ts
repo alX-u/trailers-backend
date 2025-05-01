@@ -1,4 +1,5 @@
 export const EnvConfiguration = () => ({
+  NODE_ENV: process.env.NODE_ENV || 'dev',
   postgres: {
     dbName: process.env.DB_NAME,
     user: process.env.DB_USERNAME,
