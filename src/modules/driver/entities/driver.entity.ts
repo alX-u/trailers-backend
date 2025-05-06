@@ -1,46 +1,36 @@
 import { Document } from 'src/modules/document/entities/document.entity';
-import { Role } from 'src/modules/role/entities/role.entity';
-import { UserStatus } from 'src/modules/user-status/entities/user-status.entity';
+import { Vehicule } from 'src/modules/vehicule/entities/vehicule.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class User {
+export class Driver {
   @PrimaryGeneratedColumn('uuid')
-  id_user: string;
+  id_driver: string;
 
   @Column()
-  firstName: string;
+  first_name: string;
 
   @Column()
-  lastName: string;
-
-  @Column({ unique: true })
-  email: string;
+  last_name: string;
 
   @Column()
-  password: string;
-
-  @Column()
-  phone: number;
-
-  @ManyToOne(() => Role, (role) => role.id_role)
-  role: Role;
+  phone_number: number;
 
   @OneToOne(() => Document, (document) => document.id_document)
   @JoinColumn()
   document: Document;
 
-  @ManyToOne(() => UserStatus, (userStatus) => userStatus.id_user_status)
-  userStatus: UserStatus;
+  @OneToMany(() => Vehicule, (vehicule) => vehicule.id_vehicule)
+  vehicules: Vehicule[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
