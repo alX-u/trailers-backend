@@ -30,12 +30,14 @@ export class User {
   password: string;
 
   @Column()
-  phone: number;
+  phone: string;
 
   @ManyToOne(() => Role, (role) => role.id_role)
   role: Role;
 
-  @OneToOne(() => Document, (document) => document.id_document)
+  @OneToOne(() => Document, (document) => document.id_document, {
+    cascade: true,
+  })
   @JoinColumn()
   document: Document;
 

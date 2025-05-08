@@ -23,6 +23,9 @@ import { SparePartMaterialModule } from './modules/spare-part-material/spare-par
 import { ProviderModule } from './modules/provider/provider.module';
 import { ManpowerModule } from './modules/manpower/manpower.module';
 import { ContractorModule } from './modules/contractor/contractor.module';
+import { SeedModule } from './seed/seed.module';
+import { Module } from './modules/.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -57,6 +60,8 @@ import { ContractorModule } from './modules/contractor/contractor.module';
     ProviderModule,
     ManpowerModule,
     ContractorModule,
+    SeedModule,
+    Module,
   ],
   controllers: [],
   providers: [],

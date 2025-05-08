@@ -23,7 +23,7 @@ export class Driver {
   last_name: string;
 
   @Column()
-  phone_number: number;
+  phone_number: string;
 
   @OneToOne(() => Document, (document) => document.id_document)
   @JoinColumn()

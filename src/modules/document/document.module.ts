@@ -8,5 +8,6 @@ import { Document } from './entities/document.entity';
   controllers: [DocumentController],
   providers: [DocumentService],
   imports: [TypeOrmModule.forFeature([Document])],
+  exports: [TypeOrmModule],
 })
 export class DocumentModule {}

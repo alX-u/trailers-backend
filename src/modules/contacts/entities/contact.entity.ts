@@ -15,7 +15,7 @@ export class Contact {
   name: string;
 
   @Column()
-  phone_number: number;
+  phone_number: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;

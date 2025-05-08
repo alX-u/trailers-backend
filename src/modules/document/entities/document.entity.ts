@@ -14,7 +14,7 @@ export class Document {
   id_document: string;
 
   @Column()
-  document_number: number;
+  document_number: string;
 
   @ManyToOne(() => DocumentType, (document) => document.id_document_type)
   document_type: DocumentType;
