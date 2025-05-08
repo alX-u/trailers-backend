@@ -2,5 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServiceType } from './entities/service-type.entity';
 
-@Module({ imports: [TypeOrmModule.forFeature([ServiceType])] })
+@Module({
+  imports: [TypeOrmModule.forFeature([ServiceType])],
+  exports: [TypeOrmModule],
+})
 export class ServiceTypeModule {}

@@ -16,6 +16,9 @@ export class DocumentType {
   @Column()
   name: string;
 
+  @Column()
+  abbreviation: string;
+
   @OneToMany(() => Document, (document) => document.id_document)
   documents: Document[];
 
