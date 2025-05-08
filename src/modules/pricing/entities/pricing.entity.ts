@@ -1,5 +1,11 @@
 import { User } from 'src/modules/user/entities/user.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Pricing {
@@ -13,6 +19,7 @@ export class Pricing {
   pricing_date: Date;
 
   //FKs
-  @OneToMany(() => User, (user) => user.id_user)
+  @ManyToOne(() => User, (user) => user.idUser)
+  @JoinColumn({ name: 'user' })
   user: User;
 }

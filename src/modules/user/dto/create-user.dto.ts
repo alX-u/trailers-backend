@@ -3,19 +3,15 @@ import { IsEmail, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
-  first_name: string;
+  firstName: string;
 
   @IsNotEmpty()
   @IsString()
-  last_name: string;
+  lastName: string;
 
   @IsNotEmpty()
   @IsEmail()
   email: string;
-
-  @IsNotEmpty()
-  @IsString()
-  password: string;
 
   @IsNotEmpty()
   @IsString()
@@ -29,14 +25,14 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
   @IsUUID()
-  user_status: string;
+  userStatus: string;
 
   @IsNotEmpty()
   @IsString()
   @IsUUID()
-  document_type: string;
+  documentType: string;
 
   @IsNotEmpty()
   @IsString()
-  document_number: string;
+  documentNumber: string;
 }

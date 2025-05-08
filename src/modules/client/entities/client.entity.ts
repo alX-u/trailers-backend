@@ -20,7 +20,7 @@ export class Client {
   name: string;
 
   @OneToOne(() => Document, (document) => document.id_document)
-  @JoinColumn()
+  @JoinColumn({ name: 'document' })
   document: Document;
 
   @OneToMany(() => Order, (order) => order.id_order)

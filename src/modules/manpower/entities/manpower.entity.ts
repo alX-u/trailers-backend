@@ -1,8 +1,9 @@
-import { Contractor } from 'src/modules/contractor/entities/contractor.entity';
+import { User } from 'src/modules/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -23,8 +24,9 @@ export class Manpower {
   unitary_cost: number;
 
   //FKs
-  @ManyToOne(() => Contractor, (contractor) => contractor.id_contractor)
-  contractor: Contractor;
+  @ManyToOne(() => User, (user) => user.idUser)
+  @JoinColumn({ name: 'contractor' })
+  contractor: User;
 
   //Date columns
   @CreateDateColumn({ type: 'timestamptz' })

@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -25,8 +26,12 @@ export class SparePartMaterial {
   @Column()
   unitary_cost: number;
 
+  @Column()
+  quantity: number;
+
   //FKs
   @ManyToOne(() => Provider, (provider) => provider.id_provider)
+  @JoinColumn({ name: 'provider' })
   provider: Provider;
 
   //Date columns

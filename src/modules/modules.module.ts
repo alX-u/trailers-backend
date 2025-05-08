@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { BillingModule } from './billing/billing.module';
 import { ClientModule } from './client/client.module';
 import { ContactsModule } from './contacts/contacts.module';
-import { ContractorModule } from './contractor/contractor.module';
 import { DocumentTypeModule } from './document-type/document-type.module';
 import { DocumentModule } from './document/document.module';
 import { DriverModule } from './driver/driver.module';
@@ -26,7 +25,6 @@ import { VehiculeModule } from './vehicule/vehicule.module';
     BillingModule,
     ClientModule,
     ContactsModule,
-    ContractorModule,
     DriverModule,
     DocumentModule,
     DocumentTypeModule,
@@ -47,7 +45,6 @@ import { VehiculeModule } from './vehicule/vehicule.module';
     BillingModule,
     ClientModule,
     ContactsModule,
-    ContractorModule,
     DriverModule,
     DocumentModule,
     DocumentTypeModule,

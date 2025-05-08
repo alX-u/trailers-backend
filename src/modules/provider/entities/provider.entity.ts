@@ -19,7 +19,7 @@ export class Provider {
 
   //FKs
   @OneToOne(() => Document, (document) => document.id_document)
-  @JoinColumn()
+  @JoinColumn({ name: 'document' })
   document: Document;
 
   //Date columns

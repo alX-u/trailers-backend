@@ -1,17 +1,24 @@
 import { User } from 'src/modules/user/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Billing {
   @PrimaryGeneratedColumn('uuid')
-  id_billing: string;
+  idBilling: string;
 
   @Column()
-  billing_number: string;
+  billingNumber: string;
 
   @Column({ type: 'timestamptz' })
-  billing_date: Date;
+  billingDate: Date;
 
-  @ManyToOne(() => User, (user) => user.id_user)
-  billed_by: User;
+  @ManyToOne(() => User, (user) => user.idUser)
+  @JoinColumn({ name: 'billed_by' })
+  billedBy: User;
 }

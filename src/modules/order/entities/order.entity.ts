@@ -10,6 +10,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
@@ -33,13 +34,15 @@ export class Order {
   order_status: OrderStatus;
 
   @ManyToOne(() => Client, (client) => client.id_client)
+  @JoinColumn({ name: 'client' })
   client: Client;
 
   @ManyToOne(() => Vehicule, (vehicule) => vehicule.id_vehicule)
+  @JoinColumn({ name: 'vehicule' })
   vehicule: Vehicule;
 
   //Many to many relationships
-  @ManyToMany(() => Billing, (billing) => billing.id_billing)
+  @ManyToMany(() => Billing, (billing) => billing.idBilling)
   @JoinTable()
   billings: Billing[];
 

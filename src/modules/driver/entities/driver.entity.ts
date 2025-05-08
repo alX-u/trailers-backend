@@ -26,7 +26,7 @@ export class Driver {
   phone_number: string;
 
   @OneToOne(() => Document, (document) => document.id_document)
-  @JoinColumn()
+  @JoinColumn({ name: 'document' })
   document: Document;
 
   @OneToMany(() => Vehicule, (vehicule) => vehicule.id_vehicule)

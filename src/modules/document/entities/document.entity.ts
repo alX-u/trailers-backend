@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -17,6 +18,7 @@ export class Document {
   document_number: string;
 
   @ManyToOne(() => DocumentType, (document) => document.id_document_type)
+  @JoinColumn({ name: 'document_type' })
   document_type: DocumentType;
 
   @CreateDateColumn({ type: 'timestamptz' })

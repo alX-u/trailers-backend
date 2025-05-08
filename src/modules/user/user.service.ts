@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -33,22 +34,17 @@ export class UserService {
 
   async createUser(createUserDto: CreateUserDto) {
     try {
-      const {
-        document_type,
-        document_number,
-        role,
-        user_status,
-        ...userDetails
-      } = createUserDto;
+      const { documentType, documentNumber, role, userStatus, ...userDetails } =
+        createUserDto;
 
       // Find the DocumentType entity
       const selectedDocumentType = await this.documentTypeRepository.findOneBy({
-        id_document_type: document_type,
+        id_document_type: documentType,
       });
 
       if (!selectedDocumentType) {
         throw new BadRequestException(
-          `DocumentType with ID ${document_type} not found`,
+          `DocumentType with ID ${documentType} not found`,
         );
       }
 
@@ -63,23 +59,28 @@ export class UserService {
 
       // Find the UserStatus entity
       const selectedUserStatus = await this.userStatusRepository.findOneBy({
-        id_user_status: user_status,
+        id_user_status: userStatus,
       });
 
       if (!selectedUserStatus) {
         throw new BadRequestException(
-          `UserStatus with ID ${user_status} not found`,
+          `UserStatus with ID ${userStatus} not found`,
         );
       }
+
+      //The idea is to send an email through sendgrid or some platform with a temp generated password
+      // for the user. This is a placeholder for the actual implementation.
+      const tempPassword = 'tempPassword';
 
       // Create a new User instance
       const newUser = this.userRepository.create({
         ...userDetails,
         role: selectedRole,
+        password: tempPassword,
         userStatus: selectedUserStatus,
         document: {
           document_type: selectedDocumentType,
-          document_number: document_number,
+          document_number: documentNumber,
         },
       });
 
@@ -90,20 +91,148 @@ export class UserService {
     }
   }
 
-  getUsers({ limit, offset }: { limit?: number; offset?: number }) {
-    return `This action returns all user`;
+  async getUsers({ limit, offset }: { limit?: number; offset?: number }) {
+    // Set default values if not provided
+    const take = limit ?? 10;
+    const skip = offset ?? 0;
+
+    try {
+      const [users, total] = await this.userRepository.findAndCount({
+        take,
+        skip,
+        order: { createdAt: 'DESC' },
+        relations: ['role', 'userStatus', 'document'],
+      });
+
+      return {
+        data: users,
+        total,
+        limit: take,
+        offset: skip,
+      };
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  getUserById(id: string) {
-    return `This action returns a #${id} user`;
+  async getUserById(id: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { idUser: id },
+        relations: ['role', 'userStatus', 'document'],
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+
+      return user;
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  updateUser(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async updateUser(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      // Find the existing user
+      const user = await this.userRepository.findOne({
+        where: { idUser: id },
+        relations: ['role', 'userStatus', 'document'],
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+
+      // Update scalar fields if provided
+      if (updateUserDto.firstName !== undefined)
+        user.firstName = updateUserDto.firstName;
+      if (updateUserDto.lastName !== undefined)
+        user.lastName = updateUserDto.lastName;
+      if (updateUserDto.email !== undefined) user.email = updateUserDto.email;
+      if (updateUserDto.phone !== undefined) user.phone = updateUserDto.phone;
+      if (updateUserDto.password !== undefined)
+        user.password = updateUserDto.password;
+
+      // Update role if provided
+      if (updateUserDto.role) {
+        const selectedRole = await this.roleRepository.findOneBy({
+          id_role: updateUserDto.role,
+        });
+        if (!selectedRole) {
+          throw new BadRequestException(
+            `Role with ID ${updateUserDto.role} not found`,
+          );
+        }
+        user.role = selectedRole;
+      }
+
+      // Update userStatus if provided
+      if (updateUserDto.userStatus) {
+        const selectedUserStatus = await this.userStatusRepository.findOneBy({
+          id_user_status: updateUserDto.userStatus,
+        });
+        if (!selectedUserStatus) {
+          throw new BadRequestException(
+            `UserStatus with ID ${updateUserDto.userStatus} not found`,
+          );
+        }
+        user.userStatus = selectedUserStatus;
+      }
+
+      // Update document if provided
+      if (updateUserDto.documentType || updateUserDto.documentNumber) {
+        // If user has a document, update it; otherwise, create a new one
+        let document = user.document;
+        if (!document) {
+          document = this.documentRepository.create();
+        }
+        if (updateUserDto.documentType) {
+          const selectedDocumentType =
+            await this.documentTypeRepository.findOneBy({
+              id_document_type: updateUserDto.documentType,
+            });
+          if (!selectedDocumentType) {
+            throw new BadRequestException(
+              `DocumentType with ID ${updateUserDto.documentType} not found`,
+            );
+          }
+          document.document_type = selectedDocumentType;
+        }
+        if (updateUserDto.documentNumber !== undefined) {
+          document.document_number = updateUserDto.documentNumber;
+        }
+        user.document = document;
+      }
+
+      // Save the updated user (cascades to document if needed)
+      const updatedUser = await this.userRepository.save(user);
+
+      return updatedUser;
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  deleteUser(id: string) {
-    return `This action removes a #${id} user`;
+  async deleteUser(id: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { idUser: id },
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+
+      await this.userRepository.remove(user);
+
+      return {
+        message: `User with ID ${id} has been deleted successfully.`,
+        user,
+      };
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
   private handleDBExceptions(error: any) {

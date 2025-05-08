@@ -1,4 +1,6 @@
+import { IsOptional } from 'class-validator';
 import { Document } from 'src/modules/document/entities/document.entity';
+import { Manpower } from 'src/modules/manpower/entities/manpower.entity';
 import { Role } from 'src/modules/role/entities/role.entity';
 import { UserStatus } from 'src/modules/user-status/entities/user-status.entity';
 import {
@@ -7,6 +9,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -15,7 +18,7 @@ import {
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id_user: string;
+  idUser: string;
 
   @Column()
   firstName: string;
@@ -32,21 +35,27 @@ export class User {
   @Column()
   phone: string;
 
+  //Fks
   @ManyToOne(() => Role, (role) => role.id_role)
+  @JoinColumn({ name: 'role' })
   role: Role;
+
+  @OneToMany(() => Manpower, (manpower) => manpower.id_manpower)
+  manpowers: Manpower[];
 
   @OneToOne(() => Document, (document) => document.id_document, {
     cascade: true,
   })
-  @JoinColumn()
+  @JoinColumn({ name: 'document' })
   document: Document;
 
   @ManyToOne(() => UserStatus, (userStatus) => userStatus.id_user_status)
+  @JoinColumn({ name: 'userStatus' })
   userStatus: UserStatus;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

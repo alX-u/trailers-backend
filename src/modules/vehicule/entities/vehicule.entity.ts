@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -26,9 +27,11 @@ export class Vehicule {
   kms_salida: number;
 
   @ManyToOne(() => VehiculeType, (vehiculeType) => vehiculeType.vehicules)
+  @JoinColumn({ name: 'vehicule_type' })
   vehicule_type: VehiculeType;
 
   @ManyToOne(() => Driver, (driver) => driver.id_driver)
+  @JoinColumn({ name: 'driver' })
   driver: Driver;
 
   @OneToMany(() => Order, (order) => order.id_order)
