@@ -11,7 +11,7 @@ import {
 @Entity()
 export class DocumentType {
   @PrimaryGeneratedColumn('uuid')
-  id_document_type: string;
+  idDocumentType: string;
 
   @Column()
   name: string;
@@ -19,12 +19,12 @@ export class DocumentType {
   @Column()
   abbreviation: string;
 
-  @OneToMany(() => Document, (document) => document.id_document)
+  @OneToMany(() => Document, (document) => document.idDocument)
   documents: Document[];
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

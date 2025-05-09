@@ -12,7 +12,7 @@ import {
 @Entity()
 export class SparePartMaterial {
   @PrimaryGeneratedColumn('uuid')
-  id_spare_part_material: string;
+  idSparePartMaterial: string;
 
   @Column()
   name: string;
@@ -21,23 +21,23 @@ export class SparePartMaterial {
   type: string;
 
   @Column()
-  measurement_unit: string;
+  measurementUnit: string;
 
   @Column()
-  unitary_cost: number;
+  unitaryCost: number;
 
   @Column()
   quantity: number;
 
   //FKs
-  @ManyToOne(() => Provider, (provider) => provider.id_provider)
+  @ManyToOne(() => Provider, (provider) => provider.idProvider)
   @JoinColumn({ name: 'provider' })
   provider: Provider;
 
   //Date columns
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

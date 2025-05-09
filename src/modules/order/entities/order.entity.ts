@@ -21,23 +21,23 @@ import {
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn('uuid')
-  id_order: string;
+  idOrder: string;
 
   @Column()
-  order_number: string;
+  orderNumber: string;
 
   @Column({ type: 'timestamptz' })
-  out_date: Date;
+  outDate: Date;
 
   //FKs
-  @ManyToOne(() => OrderStatus, (orderStatus) => orderStatus.id_order_status)
-  order_status: OrderStatus;
+  @ManyToOne(() => OrderStatus, (orderStatus) => orderStatus.idOrderStatus)
+  orderStatus: OrderStatus;
 
-  @ManyToOne(() => Client, (client) => client.id_client)
+  @ManyToOne(() => Client, (client) => client.idClient)
   @JoinColumn({ name: 'client' })
   client: Client;
 
-  @ManyToOne(() => Vehicule, (vehicule) => vehicule.id_vehicule)
+  @ManyToOne(() => Vehicule, (vehicule) => vehicule.idVehicule)
   @JoinColumn({ name: 'vehicule' })
   vehicule: Vehicule;
 
@@ -46,29 +46,29 @@ export class Order {
   @JoinTable()
   billings: Billing[];
 
-  @ManyToMany(() => ServiceType, (serviceType) => serviceType.id_service_type)
+  @ManyToMany(() => ServiceType, (serviceType) => serviceType.idServiceType)
   @JoinTable()
-  service_types: ServiceType[];
+  serviceTypes: ServiceType[];
 
-  @ManyToMany(() => Pricing, (pricing) => pricing.id_pricing)
+  @ManyToMany(() => Pricing, (pricing) => pricing.idPricing)
   @JoinTable()
   pricings: Pricing[];
 
   @ManyToMany(
     () => SparePartMaterial,
-    (sparePartMaterial) => sparePartMaterial.id_spare_part_material,
+    (sparePartMaterial) => sparePartMaterial.idSparePartMaterial,
   )
   @JoinTable()
-  spare_part_materials: SparePartMaterial[];
+  sparePartMaterials: SparePartMaterial[];
 
-  @ManyToMany(() => Manpower, (manpower) => manpower.id_manpower)
+  @ManyToMany(() => Manpower, (manpower) => manpower.idManpower)
   @JoinTable()
   manpowers: Manpower[];
 
   //Date columns
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

@@ -9,14 +9,14 @@ import {
 @Entity()
 export class ServiceType {
   @PrimaryGeneratedColumn('uuid')
-  id_service_type: string;
+  idServiceType: string;
 
   @Column()
   name: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

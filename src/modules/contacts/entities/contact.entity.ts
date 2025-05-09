@@ -9,7 +9,7 @@ import {
 @Entity()
 export class Contact {
   @PrimaryGeneratedColumn('uuid')
-  id_contact: string;
+  idContact: string;
 
   @Column()
   name: string;
@@ -18,8 +18,8 @@ export class Contact {
   phone_number: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

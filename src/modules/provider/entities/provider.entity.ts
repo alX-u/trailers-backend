@@ -12,20 +12,26 @@ import {
 @Entity()
 export class Provider {
   @PrimaryGeneratedColumn('uuid')
-  id_provider: string;
+  idProvider: string;
 
   @Column()
   name: string;
 
+  @Column()
+  email: string;
+
+  @Column()
+  phoneNumber: string;
+
   //FKs
-  @OneToOne(() => Document, (document) => document.id_document)
+  @OneToOne(() => Document, (document) => document.idDocument)
   @JoinColumn({ name: 'document' })
   document: Document;
 
   //Date columns
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

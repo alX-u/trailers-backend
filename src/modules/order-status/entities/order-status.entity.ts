@@ -11,17 +11,17 @@ import {
 @Entity()
 export class OrderStatus {
   @PrimaryGeneratedColumn('uuid')
-  id_order_status: string;
+  idOrderStatus: string;
 
   @Column()
   name: string;
 
-  @OneToMany(() => Order, (order) => order.id_order)
+  @OneToMany(() => Order, (order) => order.idOrder)
   orders: Order[];
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

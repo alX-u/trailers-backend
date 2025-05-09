@@ -12,18 +12,18 @@ import {
 @Entity()
 export class Document {
   @PrimaryGeneratedColumn('uuid')
-  id_document: string;
+  idDocument: string;
 
   @Column()
-  document_number: string;
+  documentNumber: string;
 
-  @ManyToOne(() => DocumentType, (document) => document.id_document_type)
+  @ManyToOne(() => DocumentType, (document) => document.idDocumentType)
   @JoinColumn({ name: 'document_type' })
-  document_type: DocumentType;
+  documentType: DocumentType;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

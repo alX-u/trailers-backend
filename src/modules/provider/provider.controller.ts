@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ProviderService } from './provider.service';
 import { CreateProviderDto } from './dto/create-provider.dto';
@@ -15,31 +16,36 @@ import { UpdateProviderDto } from './dto/update-provider.dto';
 export class ProviderController {
   constructor(private readonly providerService: ProviderService) {}
 
+  //Create a provider
   @Post()
-  create(@Body() createProviderDto: CreateProviderDto) {
-    return this.providerService.create(createProviderDto);
+  createProvider(@Body() createProviderDto: CreateProviderDto) {
+    return this.providerService.createProvider(createProviderDto);
   }
 
+  //Get all providers with pagination
   @Get()
-  findAll() {
-    return this.providerService.findAll();
+  getProviders(@Query('limit') limit: number, @Query('offset') offset: number) {
+    return this.providerService.getProviders({ limit, offset });
   }
 
+  //Get a provider by id
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.providerService.findOne(+id);
+  getProviderById(@Param('id') id: string) {
+    return this.providerService.getProviderById(id);
   }
 
+  //Update a provider
   @Patch(':id')
-  update(
+  updateProvider(
     @Param('id') id: string,
     @Body() updateProviderDto: UpdateProviderDto,
   ) {
-    return this.providerService.update(+id, updateProviderDto);
+    return this.providerService.updateProvider(id, updateProviderDto);
   }
 
+  //Delete a provider
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.providerService.remove(+id);
+  deleteProvider(@Param('id') id: string) {
+    return this.providerService.deleteProvider(id);
   }
 }

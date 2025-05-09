@@ -36,20 +36,20 @@ export class User {
   phone: string;
 
   //Fks
-  @ManyToOne(() => Role, (role) => role.id_role)
+  @ManyToOne(() => Role, (role) => role.idRole)
   @JoinColumn({ name: 'role' })
   role: Role;
 
-  @OneToMany(() => Manpower, (manpower) => manpower.id_manpower)
+  @OneToMany(() => Manpower, (manpower) => manpower.idManpower)
   manpowers: Manpower[];
 
-  @OneToOne(() => Document, (document) => document.id_document, {
+  @OneToOne(() => Document, (document) => document.idDocument, {
     cascade: true,
   })
   @JoinColumn({ name: 'document' })
   document: Document;
 
-  @ManyToOne(() => UserStatus, (userStatus) => userStatus.id_user_status)
+  @ManyToOne(() => UserStatus, (userStatus) => userStatus.idUserStatus)
   @JoinColumn({ name: 'userStatus' })
   userStatus: UserStatus;
 

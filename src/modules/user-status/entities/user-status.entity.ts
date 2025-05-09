@@ -11,7 +11,7 @@ import {
 @Entity()
 export class UserStatus {
   @PrimaryGeneratedColumn('uuid')
-  id_user_status: string;
+  idUserStatus: string;
 
   @Column()
   name: string;
@@ -20,8 +20,8 @@ export class UserStatus {
   users: User[];
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

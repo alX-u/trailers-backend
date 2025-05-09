@@ -1,25 +1,33 @@
 import { User } from 'src/modules/user/entities/user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
 export class Pricing {
   @PrimaryGeneratedColumn('uuid')
-  id_pricing: string;
+  idPricing: string;
 
   @Column()
-  pricing_number: string;
+  pricingNumber: string;
 
   @Column({ type: 'timestamptz' })
-  pricing_date: Date;
+  pricingDate: Date;
 
   //FKs
   @ManyToOne(() => User, (user) => user.idUser)
   @JoinColumn({ name: 'user' })
   user: User;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt: Date;
 }

@@ -11,17 +11,17 @@ import {
 @Entity()
 export class VehiculeType {
   @PrimaryGeneratedColumn('uuid')
-  id_vehicule_type: string;
+  idVehiculeType: string;
 
   @Column()
   name: string;
 
-  @OneToMany(() => Vehicule, (vehicule) => vehicule.id_vehicule)
+  @OneToMany(() => Vehicule, (vehicule) => vehicule.idVehicule)
   vehicules: Vehicule[];
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

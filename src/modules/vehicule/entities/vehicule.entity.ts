@@ -15,31 +15,31 @@ import {
 @Entity()
 export class Vehicule {
   @PrimaryGeneratedColumn('uuid')
-  id_vehicule: string;
+  idVehicule: string;
 
   @Column()
-  placa_cabezote: string;
+  placaCabezote: string;
 
   @Column()
-  placa_trailer: string;
+  placaTrailer: string;
 
   @Column()
-  kms_salida: number;
+  kmsSalida: number;
 
   @ManyToOne(() => VehiculeType, (vehiculeType) => vehiculeType.vehicules)
   @JoinColumn({ name: 'vehicule_type' })
-  vehicule_type: VehiculeType;
+  vehiculeType: VehiculeType;
 
-  @ManyToOne(() => Driver, (driver) => driver.id_driver)
+  @ManyToOne(() => Driver, (driver) => driver.idDriver)
   @JoinColumn({ name: 'driver' })
   driver: Driver;
 
-  @OneToMany(() => Order, (order) => order.id_order)
+  @OneToMany(() => Order, (order) => order.idOrder)
   orders: Order[];
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

@@ -39,7 +39,7 @@ export class UserService {
 
       // Find the DocumentType entity
       const selectedDocumentType = await this.documentTypeRepository.findOneBy({
-        id_document_type: documentType,
+        idDocumentType: documentType,
       });
 
       if (!selectedDocumentType) {
@@ -50,7 +50,7 @@ export class UserService {
 
       // Find the Role entity
       const selectedRole = await this.roleRepository.findOneBy({
-        id_role: role,
+        idRole: role,
       });
 
       if (!selectedRole) {
@@ -59,7 +59,7 @@ export class UserService {
 
       // Find the UserStatus entity
       const selectedUserStatus = await this.userStatusRepository.findOneBy({
-        id_user_status: userStatus,
+        idUserStatus: userStatus,
       });
 
       if (!selectedUserStatus) {
@@ -79,8 +79,8 @@ export class UserService {
         password: tempPassword,
         userStatus: selectedUserStatus,
         document: {
-          document_type: selectedDocumentType,
-          document_number: documentNumber,
+          documentType: selectedDocumentType,
+          documentNumber: documentNumber,
         },
       });
 
@@ -157,7 +157,7 @@ export class UserService {
       // Update role if provided
       if (updateUserDto.role) {
         const selectedRole = await this.roleRepository.findOneBy({
-          id_role: updateUserDto.role,
+          idRole: updateUserDto.role,
         });
         if (!selectedRole) {
           throw new BadRequestException(
@@ -170,7 +170,7 @@ export class UserService {
       // Update userStatus if provided
       if (updateUserDto.userStatus) {
         const selectedUserStatus = await this.userStatusRepository.findOneBy({
-          id_user_status: updateUserDto.userStatus,
+          idUserStatus: updateUserDto.userStatus,
         });
         if (!selectedUserStatus) {
           throw new BadRequestException(
@@ -190,17 +190,17 @@ export class UserService {
         if (updateUserDto.documentType) {
           const selectedDocumentType =
             await this.documentTypeRepository.findOneBy({
-              id_document_type: updateUserDto.documentType,
+              idDocumentType: updateUserDto.documentType,
             });
           if (!selectedDocumentType) {
             throw new BadRequestException(
               `DocumentType with ID ${updateUserDto.documentType} not found`,
             );
           }
-          document.document_type = selectedDocumentType;
+          document.documentType = selectedDocumentType;
         }
         if (updateUserDto.documentNumber !== undefined) {
-          document.document_number = updateUserDto.documentNumber;
+          document.documentNumber = updateUserDto.documentNumber;
         }
         user.document = document;
       }

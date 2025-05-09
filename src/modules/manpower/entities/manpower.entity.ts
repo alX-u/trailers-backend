@@ -12,7 +12,7 @@ import {
 @Entity()
 export class Manpower {
   @PrimaryGeneratedColumn('uuid')
-  id_manpower: string;
+  idManpower: string;
 
   @Column()
   name: string;
@@ -21,7 +21,7 @@ export class Manpower {
   type: string;
 
   @Column()
-  unitary_cost: number;
+  unitaryCost: number;
 
   //FKs
   @ManyToOne(() => User, (user) => user.idUser)
@@ -30,8 +30,8 @@ export class Manpower {
 
   //Date columns
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

@@ -14,27 +14,27 @@ import {
 @Entity()
 export class Driver {
   @PrimaryGeneratedColumn('uuid')
-  id_driver: string;
+  idDriver: string;
 
   @Column()
-  first_name: string;
+  firstName: string;
 
   @Column()
-  last_name: string;
+  lastName: string;
 
   @Column()
-  phone_number: string;
+  phoneNumber: string;
 
-  @OneToOne(() => Document, (document) => document.id_document)
+  @OneToOne(() => Document, (document) => document.idDocument)
   @JoinColumn({ name: 'document' })
   document: Document;
 
-  @OneToMany(() => Vehicule, (vehicule) => vehicule.id_vehicule)
+  @OneToMany(() => Vehicule, (vehicule) => vehicule.idVehicule)
   vehicules: Vehicule[];
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

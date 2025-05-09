@@ -14,21 +14,21 @@ import {
 @Entity()
 export class Client {
   @PrimaryGeneratedColumn('uuid')
-  id_client: string;
+  idClient: string;
 
   @Column()
   name: string;
 
-  @OneToOne(() => Document, (document) => document.id_document)
+  @OneToOne(() => Document, (document) => document.idDocument)
   @JoinColumn({ name: 'document' })
   document: Document;
 
-  @OneToMany(() => Order, (order) => order.id_order)
+  @OneToMany(() => Order, (order) => order.idOrder)
   orders: Order[];
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

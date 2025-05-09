@@ -11,7 +11,7 @@ import {
 @Entity()
 export class Role {
   @PrimaryGeneratedColumn('uuid')
-  id_role: string;
+  idRole: string;
 
   @Column()
   name: string;
@@ -20,8 +20,8 @@ export class Role {
   users: User[];
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }
