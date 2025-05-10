@@ -14,7 +14,7 @@ export class Document {
   @PrimaryGeneratedColumn('uuid')
   idDocument: string;
 
-  @Column()
+  @Column({ unique: true })
   documentNumber: string;
 
   @ManyToOne(() => DocumentType, (document) => document.idDocumentType)

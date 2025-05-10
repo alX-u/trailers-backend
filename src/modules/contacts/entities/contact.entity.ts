@@ -1,7 +1,10 @@
+import { Client } from 'src/modules/client/entities/client.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -16,6 +19,13 @@ export class Contact {
 
   @Column()
   phone_number: string;
+
+  @ManyToOne(() => Client, (client) => client.idClient)
+  @JoinColumn({ name: 'client' })
+  client: Client;
+
+  @Column()
+  isPrincipalContact: boolean;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

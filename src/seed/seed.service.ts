@@ -92,8 +92,8 @@ export class SeedService {
     const serviceTypes = [
       { name: 'Mantenimiento' },
       { name: 'Reparación' },
-      { name: 'Piezas' },
-      { name: 'Repuestos' },
+      { name: 'Piezas/Repuestos' },
+      { name: 'Fabricación' },
     ];
 
     for (const serviceType of serviceTypes) {

@@ -1,26 +1,150 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Client } from './entities/client.entity';
+import { Repository } from 'typeorm';
+import { DocumentType } from '../document-type/entities/document-type.entity';
 
 @Injectable()
 export class ClientService {
-  create(createClientDto: CreateClientDto) {
-    return 'This action adds a new client';
+  constructor(
+    @InjectRepository(Client)
+    private readonly clientRepository: Repository<Client>,
+    @InjectRepository(DocumentType)
+    private readonly documentTypeRepository: Repository<DocumentType>,
+  ) {}
+  async createClient(createClientDto: CreateClientDto): Promise<Client> {
+    const { documentType, documentNumber, ...clientDetails } = createClientDto;
+
+    // Find the DocumentType entity
+    const selectedDocumentType = await this.documentTypeRepository.findOneBy({
+      idDocumentType: documentType,
+    });
+
+    if (!selectedDocumentType) {
+      throw new BadRequestException(
+        `DocumentType with ID ${documentType} not found`,
+      );
+    }
+
+    // Create a new client
+    const client = this.clientRepository.create({
+      ...clientDetails,
+      document: {
+        documentType: selectedDocumentType,
+        documentNumber: documentNumber,
+      },
+    });
+
+    // Save the client entity to the database
+    return await this.clientRepository.save(client);
   }
 
-  findAll() {
-    return `This action returns all client`;
+  async getClientsPaginated({
+    limit,
+    offset,
+  }: {
+    limit?: number;
+    offset?: number;
+  }) {
+    // Set default values if not provided
+    const take = limit ?? 10;
+    const skip = offset ?? 0;
+
+    try {
+      const [clients, total] = await this.clientRepository.findAndCount({
+        take,
+        skip,
+        order: { createdAt: 'DESC' },
+      });
+
+      return {
+        data: clients,
+        total,
+        limit: take,
+        offset: skip,
+      };
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} client`;
+  async getClientById(id: string): Promise<Client> {
+    const client = await this.clientRepository.findOne({
+      where: { idClient: id },
+      relations: ['document', 'orders', 'contacts'],
+    });
+
+    if (!client) {
+      throw new NotFoundException(`Client with ID ${id} not found`);
+    }
+
+    return client;
   }
 
-  update(id: number, updateClientDto: UpdateClientDto) {
-    return `This action updates a #${id} client`;
+  async updateClient(
+    id: string,
+    updateClientDto: UpdateClientDto,
+  ): Promise<Client> {
+    // Find the existing client
+    const client = await this.clientRepository.findOne({
+      where: { idClient: id },
+      relations: ['document'],
+    });
+
+    if (!client) {
+      throw new NotFoundException(`Client with ID ${id} not found`);
+    }
+
+    // If updating documentType or documentNumber, handle the relation
+    if (updateClientDto.documentType || updateClientDto.documentNumber) {
+      if (!client.document) {
+        client.document = {} as any;
+      }
+      if (updateClientDto.documentType) {
+        const selectedDocumentType =
+          await this.documentTypeRepository.findOneBy({
+            idDocumentType: updateClientDto.documentType,
+          });
+        if (!selectedDocumentType) {
+          throw new BadRequestException(
+            `DocumentType with ID ${updateClientDto.documentType} not found`,
+          );
+        }
+        client.document.documentType = selectedDocumentType;
+      }
+      if (updateClientDto.documentNumber) {
+        client.document.documentNumber = updateClientDto.documentNumber;
+      }
+    }
+
+    // Merge other updatable fields
+    if (updateClientDto.name) {
+      client.name = updateClientDto.name;
+    }
+
+    // Save the updated client
+    return await this.clientRepository.save(client);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} client`;
+  async softDeleteClient(id: string) {
+    // Find the existing client
+    const client = await this.clientRepository.findOne({
+      where: { idClient: id },
+      relations: ['document, orders, contacts'],
+    });
+
+    if (!client) {
+      throw new NotFoundException(`Client with id ${id} not found`);
+    }
+
+    // Soft delete the client
+    client.active = false;
+    return await this.clientRepository.save(client);
   }
 }

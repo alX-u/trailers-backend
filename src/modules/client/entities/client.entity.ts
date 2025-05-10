@@ -1,3 +1,4 @@
+import { Contact } from 'src/modules/contacts/entities/contact.entity';
 import { Document } from 'src/modules/document/entities/document.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import {
@@ -19,12 +20,19 @@ export class Client {
   @Column()
   name: string;
 
+  @Column({ default: true })
+  active: boolean;
+
+  //Fks
   @OneToOne(() => Document, (document) => document.idDocument)
   @JoinColumn({ name: 'document' })
   document: Document;
 
   @OneToMany(() => Order, (order) => order.idOrder)
   orders: Order[];
+
+  @OneToMany(() => Contact, (contact) => contact.idContact)
+  contacts: Contact[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

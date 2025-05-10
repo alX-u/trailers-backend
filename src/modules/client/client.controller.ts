@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -16,27 +18,33 @@ export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   @Post()
-  create(@Body() createClientDto: CreateClientDto) {
-    return this.clientService.create(createClientDto);
+  createClient(@Body() createClientDto: CreateClientDto) {
+    return this.clientService.createClient(createClientDto);
   }
 
   @Get()
-  findAll() {
-    return this.clientService.findAll();
+  getClientsPaginated(
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.clientService.getClientsPaginated({ limit, offset });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.clientService.findOne(+id);
+  findClientById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.clientService.getClientById(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
-    return this.clientService.update(+id, updateClientDto);
+  updateClient(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateClientDto: UpdateClientDto,
+  ) {
+    return this.clientService.updateClient(id, updateClientDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.clientService.remove(+id);
+  softDeleteClient(@Param('id', ParseUUIDPipe) id: string) {
+    return this.clientService.softDeleteClient(id);
   }
 }
