@@ -1,26 +1,114 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Client } from '../client/entities/client.entity';
+import { Repository } from 'typeorm';
+import { Contact } from './entities/contact.entity';
 
 @Injectable()
 export class ContactsService {
-  create(createContactDto: CreateContactDto) {
-    return 'This action adds a new contact';
+  constructor(
+    @InjectRepository(Contact)
+    private readonly contactRepository: Repository<Contact>,
+    @InjectRepository(Client)
+    private readonly clientRepository: Repository<Client>,
+  ) {}
+  async createContact(createContactDto: CreateContactDto) {
+    const { client, ...contactDetails } = createContactDto;
+    //Find client
+    const selectedClient = await this.clientRepository.findOneBy({
+      idClient: client,
+    });
+
+    if (!selectedClient) {
+      throw new NotFoundException(`The client with id ${client} doesn't exist`);
+    }
+
+    //Create contact
+    const newContact = await this.contactRepository.create({
+      ...contactDetails,
+      client: selectedClient,
+    });
+
+    //Save the contact entity to the database
+    return await this.contactRepository.save(newContact);
   }
 
-  findAll() {
-    return `This action returns all contacts`;
+  async getContactsByClient(clientId: string): Promise<Contact[]> {
+    const contacts = await this.contactRepository.find({
+      where: {
+        client: { idClient: clientId },
+        active: true,
+      },
+      relations: ['client'],
+    });
+
+    if (!contacts.length) {
+      throw new NotFoundException(`No contacts found for client #${clientId}`);
+    }
+
+    return contacts;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} contact`;
+  async updateContact(
+    id: string,
+    updateContactDto: UpdateContactDto,
+  ): Promise<Contact> {
+    // Find the contact by id
+    const contact = await this.contactRepository.findOne({
+      where: { idContact: id, active: true },
+      relations: ['client'],
+    });
+
+    if (!contact) {
+      throw new NotFoundException(`Contact with id ${id} not found`);
+    }
+
+    // If client is being updated, validate the new client exists
+    if (updateContactDto.client) {
+      const newClient = await this.clientRepository.findOneBy({
+        idClient: updateContactDto.client,
+      });
+      if (!newClient) {
+        throw new NotFoundException(
+          `The client with id ${updateContactDto.client} doesn't exist`,
+        );
+      }
+      contact.client = newClient;
+    }
+
+    // Update other fields
+    if (updateContactDto.name !== undefined)
+      contact.name = updateContactDto.name;
+    if (updateContactDto.phoneNumber !== undefined)
+      contact.phoneNumber = updateContactDto.phoneNumber;
+    if (updateContactDto.isPrincipalContact !== undefined)
+      contact.isPrincipalContact = updateContactDto.isPrincipalContact;
+    if (updateContactDto.active !== undefined)
+      contact.active = updateContactDto.active;
+
+    // Save and return the updated contact
+    return await this.contactRepository.save(contact);
   }
 
-  update(id: number, updateContactDto: UpdateContactDto) {
-    return `This action updates a #${id} contact`;
-  }
+  async softDeleteContact(id: string): Promise<{ message: string }> {
+    // Find the contact by id and ensure it is active
+    const contact = await this.contactRepository.findOne({
+      where: { idContact: id, active: true },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} contact`;
+    if (!contact) {
+      throw new NotFoundException(
+        `Contact with id ${id} not found or already inactive`,
+      );
+    }
+
+    contact.active = false;
+    await this.contactRepository.save(contact);
+
+    return {
+      message: `Contact #${id} has been soft deleted (set to inactive).`,
+    };
   }
 }

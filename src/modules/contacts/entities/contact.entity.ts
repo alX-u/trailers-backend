@@ -18,14 +18,17 @@ export class Contact {
   name: string;
 
   @Column()
-  phone_number: string;
+  phoneNumber: string;
 
   @ManyToOne(() => Client, (client) => client.idClient)
   @JoinColumn({ name: 'client' })
   client: Client;
 
-  @Column()
+  @Column({ default: false })
   isPrincipalContact: boolean;
+
+  @Column({ default: true })
+  active: boolean;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
