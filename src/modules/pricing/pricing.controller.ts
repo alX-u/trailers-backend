@@ -16,27 +16,25 @@ export class PricingController {
   constructor(private readonly pricingService: PricingService) {}
 
   @Post()
-  create(@Body() createPricingDto: CreatePricingDto) {
-    return this.pricingService.create(createPricingDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.pricingService.findAll();
+  createPricing(@Body() createPricingDto: CreatePricingDto) {
+    return this.pricingService.createPricing(createPricingDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pricingService.findOne(+id);
+  getPricingById(@Param('id') id: string) {
+    return this.pricingService.getPricingById(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePricingDto: UpdatePricingDto) {
-    return this.pricingService.update(+id, updatePricingDto);
+  updatePricing(
+    @Param('id') id: string,
+    @Body() updatePricingDto: UpdatePricingDto,
+  ) {
+    return this.pricingService.updatePricing(id, updatePricingDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.pricingService.remove(+id);
+  softDeletePricing(@Param('id') id: string) {
+    return this.pricingService.softDeletePricing(id);
   }
 }

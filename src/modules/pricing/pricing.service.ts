@@ -1,26 +1,128 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePricingDto } from './dto/create-pricing.dto';
 import { UpdatePricingDto } from './dto/update-pricing.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Pricing } from './entities/pricing.entity';
+import { Repository } from 'typeorm';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class PricingService {
-  create(createPricingDto: CreatePricingDto) {
-    return 'This action adds a new pricing';
+  constructor(
+    @InjectRepository(Pricing)
+    private readonly pricingRepository: Repository<Pricing>,
+    private readonly userService: UserService,
+  ) {}
+  async createPricing(createPricingDto: CreatePricingDto) {
+    try {
+      // Find the user who is pricing
+      const user = await this.userService.getUserById(
+        createPricingDto.pricedBy,
+      );
+      if (!user) {
+        throw new NotFoundException(
+          `User with ID ${createPricingDto.pricedBy} not found`,
+        );
+      }
+
+      const newPricing = this.pricingRepository.create({
+        pricingNumber: createPricingDto.pricingNumber,
+        pricingDate: createPricingDto.pricingDate,
+        pricedBy: user,
+      });
+
+      return await this.pricingRepository.save(newPricing);
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  findAll() {
-    return `This action returns all pricing`;
+  async getPricingById(id: string) {
+    try {
+      const pricing = await this.pricingRepository.findOne({
+        where: { idPricing: id },
+        relations: ['pricedBy'],
+      });
+
+      if (!pricing) {
+        throw new NotFoundException(`Pricing with ID ${id} not found`);
+      }
+
+      return pricing;
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pricing`;
+  async updatePricing(id: string, updatePricingDto: UpdatePricingDto) {
+    try {
+      const pricing = await this.pricingRepository.findOne({
+        where: { idPricing: id },
+        relations: ['pricedBy'],
+      });
+
+      if (!pricing) {
+        throw new NotFoundException(`Pricing with ID ${id} not found`);
+      }
+
+      // Update fields if provided
+      if (updatePricingDto.pricingNumber !== undefined) {
+        pricing.pricingNumber = updatePricingDto.pricingNumber;
+      }
+      if (updatePricingDto.pricingDate !== undefined) {
+        pricing.pricingDate = updatePricingDto.pricingDate;
+      }
+      if (updatePricingDto.pricedBy !== undefined) {
+        const user = await this.userService.getUserById(
+          updatePricingDto.pricedBy,
+        );
+        if (!user) {
+          throw new BadRequestException(
+            `User with ID ${updatePricingDto.pricedBy} not found`,
+          );
+        }
+        pricing.pricedBy = user;
+      }
+      if (updatePricingDto.active !== undefined) {
+        pricing.active = updatePricingDto.active;
+      }
+
+      return await this.pricingRepository.save(pricing);
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  update(id: number, updatePricingDto: UpdatePricingDto) {
-    return `This action updates a #${id} pricing`;
+  async softDeletePricing(id: string) {
+    try {
+      const pricing = await this.pricingRepository.findOne({
+        where: { idPricing: id },
+      });
+
+      if (!pricing) {
+        throw new NotFoundException(`Pricing with ID ${id} not found`);
+      }
+
+      await this.pricingRepository.softRemove(pricing);
+
+      return {
+        message: `Pricing with ID ${id} has been soft deleted successfully.`,
+        pricing,
+      };
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} pricing`;
+  private handleDBExceptions(error: any) {
+    if (error.code === '23505') {
+      throw new BadRequestException(error.detail);
+    }
+    throw new InternalServerErrorException('Unexpected error, check logs');
   }
 }

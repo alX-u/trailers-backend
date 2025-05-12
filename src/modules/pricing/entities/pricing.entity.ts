@@ -23,7 +23,10 @@ export class Pricing {
   //FKs
   @ManyToOne(() => User, (user) => user.idUser)
   @JoinColumn({ name: 'user' })
-  user: User;
+  pricedBy: User;
+
+  @Column({ default: true })
+  active: boolean;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
