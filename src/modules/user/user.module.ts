@@ -18,6 +18,6 @@ import { DocumentTypeModule } from '../document-type/document-type.module';
     DocumentTypeModule,
     UserStatusModule,
   ],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, UserService],
 })
 export class UserModule {}

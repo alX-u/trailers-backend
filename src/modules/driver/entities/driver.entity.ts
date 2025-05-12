@@ -29,6 +29,9 @@ export class Driver {
   @JoinColumn({ name: 'document' })
   document: Document;
 
+  @Column({ default: true })
+  active: boolean;
+
   @OneToMany(() => Vehicule, (vehicule) => vehicule.idVehicule)
   vehicules: Vehicule[];
 

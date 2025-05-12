@@ -16,30 +16,30 @@ export class ManpowerController {
   constructor(private readonly manpowerService: ManpowerService) {}
 
   @Post()
-  create(@Body() createManpowerDto: CreateManpowerDto) {
-    return this.manpowerService.create(createManpowerDto);
+  createManpower(@Body() createManpowerDto: CreateManpowerDto) {
+    return this.manpowerService.createManpower(createManpowerDto);
   }
 
   @Get()
-  findAll() {
-    return this.manpowerService.findAll();
+  getAllManpower() {
+    return this.manpowerService.getAllManpower();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.manpowerService.findOne(+id);
+  getManpowerById(@Param('id') id: string) {
+    return this.manpowerService.getManpowerById(id);
   }
 
   @Patch(':id')
-  update(
+  updateManpower(
     @Param('id') id: string,
     @Body() updateManpowerDto: UpdateManpowerDto,
   ) {
-    return this.manpowerService.update(+id, updateManpowerDto);
+    return this.manpowerService.updateManpower(id, updateManpowerDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.manpowerService.remove(+id);
+  softDeleteManpower(@Param('id') id: string) {
+    return this.manpowerService.softDeleteManpower(id);
   }
 }

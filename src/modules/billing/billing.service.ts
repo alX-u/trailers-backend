@@ -1,26 +1,98 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBillingDto } from './dto/create-billing.dto';
 import { UpdateBillingDto } from './dto/update-billing.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Billing } from './entities/billing.entity';
+import { Repository } from 'typeorm';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class BillingService {
-  create(createBillingDto: CreateBillingDto) {
-    return 'This action adds a new billing';
+  constructor(
+    @InjectRepository(Billing)
+    private readonly billingRepository: Repository<Billing>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+  async createBilling(createBillingDto: CreateBillingDto): Promise<Billing> {
+    const { billedBy, ...billingDetails } = createBillingDto;
+
+    //Find user
+    const selectedUser = await this.userRepository.findOneBy({
+      idUser: billedBy,
+    });
+
+    if (!selectedUser) {
+      throw new NotFoundException(`User with ID ${billedBy} not found`);
+    }
+
+    // Create a new billing entity from the DTO
+    const billing = this.billingRepository.create({
+      ...billingDetails,
+      billedBy: selectedUser,
+    });
+    // Save the billing entity to the database
+    return await this.billingRepository.save(billing);
+  }
+  async getBillingById(id: string): Promise<Billing> {
+    const billing = await this.billingRepository.findOne({
+      where: { idBilling: id },
+      relations: ['billedBy'],
+    });
+    if (!billing) {
+      throw new NotFoundException(`Billing with ID ${id} not found`);
+    }
+    return billing;
   }
 
-  findAll() {
-    return `This action returns all billing`;
-  }
+  async updateBilling(
+    id: string,
+    updateBillingDto: UpdateBillingDto,
+  ): Promise<Billing> {
+    const billing = await this.billingRepository.findOne({
+      where: { idBilling: id },
+      relations: ['billedBy'],
+    });
+    if (!billing) {
+      throw new NotFoundException(`Billing with ID ${id} not found`);
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} billing`;
-  }
+    // If billedBy is being updated, validate the user exists
+    if (updateBillingDto.billedBy) {
+      const user = await this.userRepository.findOneBy({
+        idUser: updateBillingDto.billedBy,
+      });
+      if (!user) {
+        throw new NotFoundException(
+          `User with ID ${updateBillingDto.billedBy} not found`,
+        );
+      }
+      billing.billedBy = user;
+    }
 
-  update(id: number, updateBillingDto: UpdateBillingDto) {
-    return `This action updates a #${id} billing`;
-  }
+    // Update other fields
+    if (updateBillingDto.billingNumber !== undefined)
+      billing.billingNumber = updateBillingDto.billingNumber;
+    if (updateBillingDto.billingDate !== undefined)
+      billing.billingDate = updateBillingDto.billingDate;
+    if (updateBillingDto.active !== undefined)
+      billing.active = updateBillingDto.active;
 
-  remove(id: number) {
-    return `This action removes a #${id} billing`;
+    return await this.billingRepository.save(billing);
+  }
+  async softDeleteBilling(id: string): Promise<{ message: string }> {
+    const billing = await this.billingRepository.findOne({
+      where: { idBilling: id, active: true },
+    });
+    if (!billing) {
+      throw new NotFoundException(
+        `Billing with ID ${id} not found or already inactive`,
+      );
+    }
+    billing.active = false;
+    await this.billingRepository.save(billing);
+    return {
+      message: `Billing #${id} has been soft deleted (set to inactive).`,
+    };
   }
 }

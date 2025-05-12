@@ -18,6 +18,9 @@ export class Billing {
   @Column({ type: 'timestamptz' })
   billingDate: Date;
 
+  @Column({ default: false })
+  active: boolean;
+
   @ManyToOne(() => User, (user) => user.idUser)
   @JoinColumn({ name: 'billed_by' })
   billedBy: User;

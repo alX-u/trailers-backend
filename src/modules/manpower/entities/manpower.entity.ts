@@ -28,6 +28,9 @@ export class Manpower {
   @JoinColumn({ name: 'contractor' })
   contractor: User;
 
+  @Column({ default: true })
+  active: boolean;
+
   //Date columns
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

@@ -1,26 +1,107 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateManpowerDto } from './dto/create-manpower.dto';
 import { UpdateManpowerDto } from './dto/update-manpower.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Manpower } from './entities/manpower.entity';
+import { Repository } from 'typeorm';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ManpowerService {
-  create(createManpowerDto: CreateManpowerDto) {
-    return 'This action adds a new manpower';
+  constructor(
+    @InjectRepository(Manpower)
+    private readonly manpowerRepository: Repository<Manpower>,
+    private readonly userService: UserService,
+  ) {}
+  async createManpower(createManpowerDto: CreateManpowerDto) {
+    const { name, type, unitaryCost, contractor } = createManpowerDto;
+
+    // Validate contractor (user) exists
+    const contractorUser = await this.userService.getUserById(contractor);
+    if (!contractorUser) {
+      throw new NotFoundException(
+        `Contractor (user) with id ${contractor} not found`,
+      );
+    }
+
+    // Create and save the manpower entity
+    const manpower = this.manpowerRepository.create({
+      name,
+      type,
+      unitaryCost,
+      contractor: contractorUser,
+      active: true,
+    });
+
+    return await this.manpowerRepository.save(manpower);
   }
 
-  findAll() {
-    return `This action returns all manpower`;
+  async getAllManpower() {
+    return await this.manpowerRepository.find({
+      where: { active: true },
+      relations: ['contractor'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} manpower`;
+  async getManpowerById(id: string) {
+    const manpower = await this.manpowerRepository.findOne({
+      where: { idManpower: id, active: true },
+      relations: ['contractor'],
+    });
+    if (!manpower) {
+      throw new NotFoundException(`Manpower with id ${id} not found`);
+    }
+    return manpower;
   }
 
-  update(id: number, updateManpowerDto: UpdateManpowerDto) {
-    return `This action updates a #${id} manpower`;
+  async updateManpower(id: string, updateManpowerDto: UpdateManpowerDto) {
+    const manpower = await this.manpowerRepository.findOne({
+      where: { idManpower: id, active: true },
+      relations: ['contractor'],
+    });
+    if (!manpower) {
+      throw new NotFoundException(`Manpower with id ${id} not found`);
+    }
+
+    // If contractor is being updated, validate the new contractor exists
+    if (updateManpowerDto.contractor) {
+      const contractorUser = await this.userService.getUserById(
+        updateManpowerDto.contractor,
+      );
+      if (!contractorUser) {
+        throw new NotFoundException(
+          `Contractor (user) with id ${updateManpowerDto.contractor} not found`,
+        );
+      }
+      manpower.contractor = contractorUser;
+    }
+
+    if (updateManpowerDto.name !== undefined)
+      manpower.name = updateManpowerDto.name;
+    if (updateManpowerDto.type !== undefined)
+      manpower.type = updateManpowerDto.type;
+    if (updateManpowerDto.unitaryCost !== undefined)
+      manpower.unitaryCost = updateManpowerDto.unitaryCost;
+    if (updateManpowerDto.active !== undefined)
+      manpower.active = updateManpowerDto.active;
+
+    return await this.manpowerRepository.save(manpower);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} manpower`;
+  async softDeleteManpower(id: string) {
+    const manpower = await this.manpowerRepository.findOne({
+      where: { idManpower: id, active: true },
+    });
+    if (!manpower) {
+      throw new NotFoundException(
+        `Manpower with id ${id} not found or already inactive`,
+      );
+    }
+    manpower.active = false;
+    await this.manpowerRepository.save(manpower);
+    return {
+      message: `Manpower #${id} has been soft deleted (set to inactive).`,
+    };
   }
 }
