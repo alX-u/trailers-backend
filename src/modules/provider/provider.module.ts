@@ -14,5 +14,6 @@ import { DocumentModule } from '../document/document.module';
     DocumentTypeModule,
     DocumentModule,
   ],
+  exports: [TypeOrmModule, ProviderService],
 })
 export class ProviderModule {}

@@ -29,6 +29,9 @@ export class SparePartMaterial {
   @Column()
   quantity: number;
 
+  @Column({ default: true })
+  active: boolean;
+
   //FKs
   @ManyToOne(() => Provider, (provider) => provider.idProvider)
   @JoinColumn({ name: 'provider' })

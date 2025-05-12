@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { SparePartMaterialService } from './spare-part-material.service';
 import { CreateSparePartMaterialDto } from './dto/create-spare-part-material.dto';
@@ -18,33 +19,37 @@ export class SparePartMaterialController {
   ) {}
 
   @Post()
-  create(@Body() createSparePartMaterialDto: CreateSparePartMaterialDto) {
-    return this.sparePartMaterialService.create(createSparePartMaterialDto);
+  createSparepartMaterial(
+    @Body() createSparePartMaterialDto: CreateSparePartMaterialDto,
+  ) {
+    return this.sparePartMaterialService.createSparepartMaterial(
+      createSparePartMaterialDto,
+    );
   }
 
   @Get()
-  findAll() {
-    return this.sparePartMaterialService.findAll();
+  getAllSparepartMaterials() {
+    return this.sparePartMaterialService.getAllSparepartMaterials();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.sparePartMaterialService.findOne(+id);
+  getSparepartMaterialById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.sparePartMaterialService.getSparepartMaterialById(id);
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
+  updateSparepartMaterial(
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSparePartMaterialDto: UpdateSparePartMaterialDto,
   ) {
-    return this.sparePartMaterialService.update(
-      +id,
+    return this.sparePartMaterialService.updateSparepartMaterial(
+      id,
       updateSparePartMaterialDto,
     );
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.sparePartMaterialService.remove(+id);
+  softDeleteSparepartMaterial(@Param('id', ParseUUIDPipe) id: string) {
+    return this.sparePartMaterialService.softDeleteSparepartMaterial(id);
   }
 }
