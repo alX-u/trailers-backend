@@ -26,6 +26,10 @@ export class Vehicule {
   @Column()
   kmsSalida: number;
 
+  @Column({ default: true })
+  active: boolean;
+
+  //Fk
   @ManyToOne(() => VehiculeType, (vehiculeType) => vehiculeType.vehicules)
   @JoinColumn({ name: 'vehicule_type' })
   vehiculeType: VehiculeType;

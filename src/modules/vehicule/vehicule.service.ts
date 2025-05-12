@@ -1,26 +1,143 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVehiculeDto } from './dto/create-vehicule.dto';
 import { UpdateVehiculeDto } from './dto/update-vehicule.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Vehicule } from './entities/vehicule.entity';
+import { Repository } from 'typeorm';
+import { VehiculeType } from '../vehicule-type/entities/vehicule-type.entity';
+import { DriverService } from '../driver/driver.service';
 
 @Injectable()
 export class VehiculeService {
-  create(createVehiculeDto: CreateVehiculeDto) {
-    return 'This action adds a new vehicule';
+  constructor(
+    @InjectRepository(Vehicule)
+    private readonly vehiculeRepository: Repository<Vehicule>,
+    @InjectRepository(VehiculeType)
+    private readonly vehiculeTypeRepository: Repository<VehiculeType>,
+    private readonly driverService: DriverService,
+  ) {}
+  async createVehicule(createVehiculeDto: CreateVehiculeDto) {
+    const { vehiculeType, driver, ...vehiculeDetails } = createVehiculeDto;
+
+    // Resolve vehiculeType
+    const vehiculeTypeEntity = await this.vehiculeTypeRepository.findOne({
+      where: { idVehiculeType: vehiculeType },
+    });
+    if (!vehiculeTypeEntity) {
+      throw new NotFoundException(
+        `VehiculeType with id ${vehiculeType} not found`,
+      );
+    }
+
+    // Resolve driver
+    const driverEntity = await this.driverService.getDriverById(driver);
+    if (!driverEntity) {
+      throw new NotFoundException(`Driver with id ${driver} not found`);
+    }
+
+    const vehicule = this.vehiculeRepository.create({
+      ...vehiculeDetails,
+      vehiculeType: vehiculeTypeEntity,
+      driver: driverEntity,
+    });
+
+    return await this.vehiculeRepository.save(vehicule);
   }
 
-  findAll() {
-    return `This action returns all vehicule`;
+  async getVehiculesPaginated({
+    limit = 10,
+    offset = 0,
+  }: {
+    limit?: number;
+    offset?: number;
+  }) {
+    const [vehicules, total] = await this.vehiculeRepository.findAndCount({
+      where: { active: true },
+      relations: ['vehiculeType', 'driver'],
+      take: limit,
+      skip: offset,
+      order: { createdAt: 'DESC' },
+    });
+    return {
+      data: vehicules,
+      total,
+      limit,
+      offset,
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} vehicule`;
+  async getVehiculeById(id: string) {
+    const vehicule = await this.vehiculeRepository.findOne({
+      where: { idVehicule: id, active: true },
+      relations: ['vehiculeType', 'driver'],
+    });
+    if (!vehicule) {
+      throw new NotFoundException(`Vehicule with id ${id} not found`);
+    }
+    return vehicule;
   }
 
-  update(id: number, updateVehiculeDto: UpdateVehiculeDto) {
-    return `This action updates a #${id} vehicule`;
+  async updateVehicule(id: string, updateVehiculeDto: UpdateVehiculeDto) {
+    const vehicule = await this.vehiculeRepository.findOne({
+      where: { idVehicule: id, active: true },
+      relations: ['vehiculeType', 'driver'],
+    });
+    if (!vehicule) {
+      throw new NotFoundException(`Vehicule with id ${id} not found`);
+    }
+
+    // Update vehiculeType if provided
+    if (updateVehiculeDto.vehiculeType) {
+      const vehiculeTypeEntity = await this.vehiculeTypeRepository.findOne({
+        where: { idVehiculeType: updateVehiculeDto.vehiculeType },
+      });
+      if (!vehiculeTypeEntity) {
+        throw new NotFoundException(
+          `VehiculeType with id ${updateVehiculeDto.vehiculeType} not found`,
+        );
+      }
+      vehicule.vehiculeType = vehiculeTypeEntity;
+    }
+
+    // Update driver if provided
+    if (updateVehiculeDto.driver) {
+      const driverEntity = await this.driverService.getDriverById(
+        updateVehiculeDto.driver,
+      );
+      if (!driverEntity) {
+        throw new NotFoundException(
+          `Driver with id ${updateVehiculeDto.driver} not found`,
+        );
+      }
+      vehicule.driver = driverEntity;
+    }
+
+    // Update scalar fields
+    if (updateVehiculeDto.placaCabezote !== undefined)
+      vehicule.placaCabezote = updateVehiculeDto.placaCabezote;
+    if (updateVehiculeDto.placaTrailer !== undefined)
+      vehicule.placaTrailer = updateVehiculeDto.placaTrailer;
+    if (updateVehiculeDto.kmsSalida !== undefined)
+      vehicule.kmsSalida = updateVehiculeDto.kmsSalida;
+    if (updateVehiculeDto.active !== undefined)
+      vehicule.active = updateVehiculeDto.active;
+
+    return await this.vehiculeRepository.save(vehicule);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} vehicule`;
+  async softDeleteVehicule(id: string) {
+    const vehicule = await this.vehiculeRepository.findOne({
+      where: { idVehicule: id, active: true },
+    });
+    if (!vehicule) {
+      throw new NotFoundException(
+        `Vehicule with id ${id} not found or already inactive`,
+      );
+    }
+    vehicule.active = false;
+    await this.vehiculeRepository.save(vehicule);
+    return {
+      message: `Vehicule #${id} has been soft deleted (set to inactive).`,
+    };
   }
 }

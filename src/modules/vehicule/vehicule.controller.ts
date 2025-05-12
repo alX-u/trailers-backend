@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { VehiculeService } from './vehicule.service';
 import { CreateVehiculeDto } from './dto/create-vehicule.dto';
@@ -16,30 +18,36 @@ export class VehiculeController {
   constructor(private readonly vehiculeService: VehiculeService) {}
 
   @Post()
-  create(@Body() createVehiculeDto: CreateVehiculeDto) {
-    return this.vehiculeService.create(createVehiculeDto);
+  createVehicule(@Body() createVehiculeDto: CreateVehiculeDto) {
+    return this.vehiculeService.createVehicule(createVehiculeDto);
   }
 
   @Get()
-  findAll() {
-    return this.vehiculeService.findAll();
+  getVehiculesPaginated(
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.vehiculeService.getVehiculesPaginated({
+      limit: limit,
+      offset: offset,
+    });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.vehiculeService.findOne(+id);
+  getVehiculeById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiculeService.getVehiculeById(id);
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
+  updateVehicule(
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateVehiculeDto: UpdateVehiculeDto,
   ) {
-    return this.vehiculeService.update(+id, updateVehiculeDto);
+    return this.vehiculeService.updateVehicule(id, updateVehiculeDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.vehiculeService.remove(+id);
+  softDeleteVehicule(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiculeService.softDeleteVehicule(id);
   }
 }

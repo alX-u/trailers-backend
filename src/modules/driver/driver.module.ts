@@ -9,5 +9,6 @@ import { DocumentModule } from '../document/document.module';
   controllers: [DriverController],
   providers: [DriverService],
   imports: [TypeOrmModule.forFeature([Driver]), DocumentModule],
+  exports: [TypeOrmModule, DriverService],
 })
 export class DriverModule {}
