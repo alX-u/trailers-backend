@@ -9,5 +9,6 @@ import { ProviderModule } from '../provider/provider.module';
   controllers: [SparePartMaterialController],
   providers: [SparePartMaterialService],
   imports: [TypeOrmModule.forFeature([SparePartMaterial]), ProviderModule],
+  exports: [TypeOrmModule, SparePartMaterialService],
 })
 export class SparePartMaterialModule {}

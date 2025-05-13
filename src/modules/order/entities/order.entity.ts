@@ -29,6 +29,9 @@ export class Order {
   @Column({ type: 'timestamptz' })
   outDate: Date;
 
+  @Column({ default: true })
+  active: boolean;
+
   //FKs
   @ManyToOne(() => OrderStatus, (orderStatus) => orderStatus.idOrderStatus)
   orderStatus: OrderStatus;
@@ -43,26 +46,26 @@ export class Order {
 
   //Many to many relationships
   @ManyToMany(() => Billing, (billing) => billing.idBilling)
-  @JoinTable()
+  @JoinTable({ name: 'order_billing' })
   billings: Billing[];
 
   @ManyToMany(() => ServiceType, (serviceType) => serviceType.idServiceType)
-  @JoinTable()
+  @JoinTable({ name: 'order_serviceType' })
   serviceTypes: ServiceType[];
 
   @ManyToMany(() => Pricing, (pricing) => pricing.idPricing)
-  @JoinTable()
+  @JoinTable({ name: 'order_pricing' })
   pricings: Pricing[];
 
   @ManyToMany(
     () => SparePartMaterial,
     (sparePartMaterial) => sparePartMaterial.idSparePartMaterial,
   )
-  @JoinTable()
+  @JoinTable({ name: 'order_sparePartMaterial' })
   sparePartMaterials: SparePartMaterial[];
 
   @ManyToMany(() => Manpower, (manpower) => manpower.idManpower)
-  @JoinTable()
+  @JoinTable({ name: 'order_manpower' })
   manpowers: Manpower[];
 
   //Date columns

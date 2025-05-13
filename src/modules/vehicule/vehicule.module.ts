@@ -14,6 +14,6 @@ import { DriverModule } from '../driver/driver.module';
     VehiculeTypeModule,
     DriverModule,
   ],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, VehiculeService],
 })
 export class VehiculeModule {}

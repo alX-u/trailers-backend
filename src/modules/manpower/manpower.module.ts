@@ -9,5 +9,6 @@ import { UserModule } from '../user/user.module';
   controllers: [ManpowerController],
   providers: [ManpowerService],
   imports: [TypeOrmModule.forFeature([Manpower]), UserModule],
+  exports: [TypeOrmModule, ManpowerService],
 })
 export class ManpowerModule {}

@@ -9,6 +9,6 @@ import { DocumentTypeModule } from '../document-type/document-type.module';
   controllers: [ClientController],
   providers: [ClientService],
   imports: [TypeOrmModule.forFeature([Client]), DocumentTypeModule],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, ClientService],
 })
 export class ClientModule {}
