@@ -47,6 +47,7 @@ export class SparePartMaterialService {
     try {
       const [items, total] =
         await this.sparePartMaterialRepository.findAndCount({
+          where: { active: true },
           order: { createdAt: 'DESC' },
           relations: ['provider'],
         });
