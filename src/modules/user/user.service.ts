@@ -101,11 +101,31 @@ export class UserService {
         take,
         skip,
         order: { createdAt: 'DESC' },
-        relations: ['role', 'userStatus', 'document'],
+        relations: ['role', 'userStatus', 'document', 'document.documentType'],
+      });
+
+      // Map users to include documentType name and abbreviation
+      const data = users.map((user) => {
+        const documentType = user.document?.documentType;
+        return {
+          ...user,
+          document: user.document
+            ? {
+                ...user.document,
+                documentType: documentType
+                  ? {
+                      idDocumentType: documentType.idDocumentType,
+                      name: documentType.name,
+                      abbreviation: documentType.abbreviation,
+                    }
+                  : null,
+              }
+            : null,
+        };
       });
 
       return {
-        data: users,
+        data,
         total,
         limit: take,
         offset: skip,
