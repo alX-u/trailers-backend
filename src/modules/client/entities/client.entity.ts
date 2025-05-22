@@ -24,7 +24,9 @@ export class Client {
   active: boolean;
 
   //Fks
-  @OneToOne(() => Document, (document) => document.idDocument)
+  @OneToOne(() => Document, (document) => document.idDocument, {
+    cascade: true,
+  })
   @JoinColumn({ name: 'document' })
   document: Document;
 
