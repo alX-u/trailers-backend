@@ -25,7 +25,8 @@ export class Provider {
 
   //FKs
   @OneToOne(() => Document, (document) => document.idDocument, {
-    cascade: ['insert', 'update', 'remove', 'soft-remove', 'recover'],
+    cascade: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'document' })
   document: Document;

@@ -44,6 +44,7 @@ export class User {
 
   @OneToOne(() => Document, (document) => document.idDocument, {
     cascade: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'document' })
   document: Document;
