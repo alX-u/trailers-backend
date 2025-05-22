@@ -1,4 +1,3 @@
-import { IsOptional } from 'class-validator';
 import { Document } from 'src/modules/document/entities/document.entity';
 import { Manpower } from 'src/modules/manpower/entities/manpower.entity';
 import { Role } from 'src/modules/role/entities/role.entity';

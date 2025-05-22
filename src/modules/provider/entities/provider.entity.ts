@@ -24,7 +24,9 @@ export class Provider {
   phoneNumber: string;
 
   //FKs
-  @OneToOne(() => Document, (document) => document.idDocument)
+  @OneToOne(() => Document, (document) => document.idDocument, {
+    cascade: true,
+  })
   @JoinColumn({ name: 'document' })
   document: Document;
 
