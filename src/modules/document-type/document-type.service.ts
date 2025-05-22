@@ -10,6 +10,6 @@ export class DocumentTypeService {
     private readonly documentTypeRepository: Repository<DocumentType>,
   ) {}
   async getAllDocumentTypes() {
-    return this.documentTypeRepository.find();
+    return await this.documentTypeRepository.find();
   }
 }

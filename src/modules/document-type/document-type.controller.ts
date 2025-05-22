@@ -5,7 +5,7 @@ import { DocumentTypeService } from './document-type.service';
 export class DocumentTypeController {
   constructor(private readonly documentTypeService: DocumentTypeService) {}
   @Get()
-  getAllDrivers() {
+  getAllDocumentTypes() {
     return this.documentTypeService.getAllDocumentTypes();
   }
 }
