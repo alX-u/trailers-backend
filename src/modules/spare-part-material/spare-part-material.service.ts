@@ -43,11 +43,13 @@ export class SparePartMaterialService {
     }
   }
 
-  async getAllSparepartMaterials() {
+  async getAllSparepartMaterials(filter?: string) {
     try {
+      const whereClause = filter === 'Activo' ? { active: true } : {}; // Empty object means no filter
+
       const [items, total] =
         await this.sparePartMaterialRepository.findAndCount({
-          where: { active: true },
+          where: whereClause,
           order: { createdAt: 'DESC' },
           relations: ['provider'],
         });

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { SparePartMaterialService } from './spare-part-material.service';
 import { CreateSparePartMaterialDto } from './dto/create-spare-part-material.dto';
@@ -28,8 +29,8 @@ export class SparePartMaterialController {
   }
 
   @Get()
-  getAllSparepartMaterials() {
-    return this.sparePartMaterialService.getAllSparepartMaterials();
+  async getAll(@Query('filter') filter?: string) {
+    return this.sparePartMaterialService.getAllSparepartMaterials(filter);
   }
 
   @Get(':id')
