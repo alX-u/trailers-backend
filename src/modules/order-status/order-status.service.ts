@@ -10,9 +10,7 @@ export class OrderStatusService {
     private readonly orderStatusRepository: Repository<OrderStatus>,
   ) {}
 
-  getAllOrderStatuses() {
-    return this.orderStatusRepository.find({
-      order: { createdAt: 'DESC' },
-    });
+  async getAllOrderStatuses() {
+    return await this.orderStatusRepository.find();
   }
 }

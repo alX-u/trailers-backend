@@ -6,7 +6,7 @@ export class OrderStatusController {
   constructor(private readonly orderStatusService: OrderStatusService) {}
 
   @Get()
-  async getAllOrderStatuses() {
-    await this.getAllOrderStatuses();
+  getAllOrderStatuses() {
+    return this.orderStatusService.getAllOrderStatuses();
   }
 }
