@@ -6,6 +6,7 @@ import { Role } from 'src/modules/role/entities/role.entity';
 import { UserStatus } from 'src/modules/user-status/entities/user-status.entity';
 import { ServiceType } from 'src/modules/service-type/entities/service-type.entity';
 import { OrderStatus } from 'src/modules/order-status/entities/order-status.entity';
+import { VehiculeType } from 'src/modules/vehicule-type/entities/vehicule-type.entity';
 
 @Injectable()
 export class SeedService {
@@ -20,6 +21,8 @@ export class SeedService {
     private readonly serviceTypeRepository: Repository<ServiceType>,
     @InjectRepository(OrderStatus)
     private readonly orderStatusRepository: Repository<OrderStatus>,
+    @InjectRepository(VehiculeType)
+    private readonly vehiculeTypeRepository: Repository<VehiculeType>,
   ) {}
 
   async seed() {
@@ -28,6 +31,7 @@ export class SeedService {
     await this.createUserStatuses();
     await this.createServiceTypes();
     await this.createOrderStatuses();
+    await this.createVehiculeTypes();
 
     return { message: 'Seed completed' };
   }
@@ -124,6 +128,24 @@ export class SeedService {
 
       if (!exists) {
         await this.orderStatusRepository.save(orderStatus);
+      }
+    }
+  }
+
+  private async createVehiculeTypes() {
+    const vehiculeTypes = [
+      { name: 'Cabezote' },
+      { name: 'Tráiler ' },
+      { name: 'Otro' },
+    ];
+
+    for (const vehiculeType of vehiculeTypes) {
+      const exists = await this.vehiculeTypeRepository.findOne({
+        where: { name: vehiculeType.name },
+      });
+
+      if (!exists) {
+        await this.vehiculeTypeRepository.save(vehiculeType);
       }
     }
   }
