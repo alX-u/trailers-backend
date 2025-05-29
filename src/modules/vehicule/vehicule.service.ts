@@ -3,7 +3,7 @@ import { CreateVehiculeDto } from './dto/create-vehicule.dto';
 import { UpdateVehiculeDto } from './dto/update-vehicule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Vehicule } from './entities/vehicule.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { VehiculeType } from '../vehicule-type/entities/vehicule-type.entity';
 import { DriverService } from '../driver/driver.service';
 
@@ -16,11 +16,21 @@ export class VehiculeService {
     private readonly vehiculeTypeRepository: Repository<VehiculeType>,
     private readonly driverService: DriverService,
   ) {}
-  async createVehicule(createVehiculeDto: CreateVehiculeDto) {
+  async createVehicule(
+    createVehiculeDto: CreateVehiculeDto,
+    manager?: EntityManager,
+  ) {
     const { vehiculeType, driver, ...vehiculeDetails } = createVehiculeDto;
 
+    const vehiculeTypeRepo = manager
+      ? manager.getRepository(VehiculeType)
+      : this.vehiculeTypeRepository;
+    const vehiculeRepo = manager
+      ? manager.getRepository(Vehicule)
+      : this.vehiculeRepository;
+
     // Resolve vehiculeType
-    const vehiculeTypeEntity = await this.vehiculeTypeRepository.findOne({
+    const vehiculeTypeEntity = await vehiculeTypeRepo.findOne({
       where: { idVehiculeType: vehiculeType },
     });
     if (!vehiculeTypeEntity) {
@@ -30,18 +40,20 @@ export class VehiculeService {
     }
 
     // Resolve driver
+    // Nota: Si getDriverById también necesita soportar transacciones, pásale el manager.
     const driverEntity = await this.driverService.getDriverById(driver);
+
     if (!driverEntity) {
       throw new NotFoundException(`Driver with id ${driver} not found`);
     }
 
-    const vehicule = this.vehiculeRepository.create({
+    const vehicule = vehiculeRepo.create({
       ...vehiculeDetails,
       vehiculeType: vehiculeTypeEntity,
       driver: driverEntity,
     });
 
-    return await this.vehiculeRepository.save(vehicule);
+    return await vehiculeRepo.save(vehicule);
   }
 
   async getVehiculesPaginated({
@@ -77,8 +89,19 @@ export class VehiculeService {
     return vehicule;
   }
 
-  async updateVehicule(id: string, updateVehiculeDto: UpdateVehiculeDto) {
-    const vehicule = await this.vehiculeRepository.findOne({
+  async updateVehicule(
+    id: string,
+    updateVehiculeDto: UpdateVehiculeDto,
+    manager?: EntityManager,
+  ) {
+    const repo = manager
+      ? manager.getRepository(Vehicule)
+      : this.vehiculeRepository;
+    const vehiculeTypeRepo = manager
+      ? manager.getRepository(VehiculeType)
+      : this.vehiculeTypeRepository;
+
+    const vehicule = await repo.findOne({
       where: { idVehicule: id, active: true },
       relations: ['vehiculeType', 'driver'],
     });
@@ -88,7 +111,7 @@ export class VehiculeService {
 
     // Update vehiculeType if provided
     if (updateVehiculeDto.vehiculeType) {
-      const vehiculeTypeEntity = await this.vehiculeTypeRepository.findOne({
+      const vehiculeTypeEntity = await vehiculeTypeRepo.findOne({
         where: { idVehiculeType: updateVehiculeDto.vehiculeType },
       });
       if (!vehiculeTypeEntity) {
@@ -122,7 +145,7 @@ export class VehiculeService {
     if (updateVehiculeDto.active !== undefined)
       vehicule.active = updateVehiculeDto.active;
 
-    return await this.vehiculeRepository.save(vehicule);
+    return await repo.save(vehicule);
   }
 
   async softDeleteVehicule(id: string) {

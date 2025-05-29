@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
 import { Repository } from 'typeorm';
@@ -14,6 +13,7 @@ import { PricingService } from '../pricing/pricing.service';
 import { SparePartMaterialService } from '../spare-part-material/spare-part-material.service';
 import { ManpowerService } from '../manpower/manpower.service';
 import { OrderStatus } from '../order-status/entities/order-status.entity';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrderService {
@@ -29,25 +29,27 @@ export class OrderService {
     private readonly manpowerService: ManpowerService,
   ) {}
   async createOrder(createOrderDto: CreateOrderDto) {
+    const connection = this.orderRepository.manager.connection;
+    const queryRunner = connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      // Resolve relations
-      const client = await this.clientService.getClientById(
+      // 1. Crear cliente
+      const client = await this.clientService.createClient(
         createOrderDto.client,
+        queryRunner.manager,
       );
-      if (!client)
-        throw new NotFoundException(
-          `Client with id ${createOrderDto.client} not found`,
-        );
 
-      const vehicule = await this.vehiculeService.getVehiculeById(
+      // 2. Crear vehículo
+      const vehicule = await this.vehiculeService.createVehicule(
         createOrderDto.vehicule,
+        queryRunner.manager,
       );
-      if (!vehicule)
-        throw new NotFoundException(
-          `Vehicule with id ${createOrderDto.vehicule} not found`,
-        );
 
-      const orderStatus = await this.orderStatusRepository.findOne({
+      // 3. Buscar estado de la orden
+      const orderStatus = await queryRunner.manager.findOne(OrderStatus, {
         where: { idOrderStatus: createOrderDto.orderStatus },
       });
       if (!orderStatus)
@@ -55,13 +57,14 @@ export class OrderService {
           `OrderStatus with id ${createOrderDto.orderStatus} not found`,
         );
 
-      // Resolve many-to-many relations
+      // 4. Resolver relaciones many-to-many
+      // 4. Crear los pricings dentro de la transacción
       const pricings = await Promise.all(
-        (createOrderDto.pricings || []).map(async (id) => {
-          const pricing = await this.pricingService.getPricingById(id);
-          if (!pricing)
-            throw new NotFoundException(`Pricing with id ${id} not found`);
-          return pricing;
+        (createOrderDto.pricings || []).map(async (pricingDto) => {
+          return await this.pricingService.createPricing(
+            pricingDto,
+            queryRunner.manager,
+          );
         }),
       );
 
@@ -86,8 +89,8 @@ export class OrderService {
         }),
       );
 
-      // Create the order entity
-      const order = this.orderRepository.create({
+      // 5. Crear la orden
+      const order = queryRunner.manager.create(Order, {
         orderNumber: createOrderDto.orderNumber,
         outDate: createOrderDto.outDate,
         orderStatus,
@@ -99,12 +102,18 @@ export class OrderService {
         active: true,
       });
 
-      // Save and return the order
-      return await this.orderRepository.save(order);
+      // 6. Guardar la orden
+      const savedOrder = await queryRunner.manager.save(Order, order);
+
+      await queryRunner.commitTransaction();
+      return savedOrder;
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
         'Unexpected error while creating order',
       );
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -181,9 +190,15 @@ export class OrderService {
   }
 
   async updateOrder(id: string, updateOrderDto: UpdateOrderDto) {
+    const connection = this.orderRepository.manager.connection;
+    const queryRunner = connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      // Fetch the existing order
-      const order = await this.orderRepository.findOne({
+      // 1. Buscar la orden existente
+      const order = await queryRunner.manager.findOne(Order, {
         where: { idOrder: id, active: true },
         relations: [
           'client',
@@ -192,51 +207,23 @@ export class OrderService {
           'pricings',
           'sparePartMaterials',
           'manpowers',
-          'billings',
-          'serviceTypes',
         ],
       });
-
       if (!order) {
         throw new NotFoundException(`Order with id ${id} not found`);
       }
 
-      // Update scalar fields if provided
-      if (updateOrderDto.orderNumber !== undefined) {
+      // 2. Actualizar campos simples
+      if (updateOrderDto.orderNumber !== undefined)
         order.orderNumber = updateOrderDto.orderNumber;
-      }
-      if (updateOrderDto.outDate !== undefined) {
+      if (updateOrderDto.outDate !== undefined)
         order.outDate = updateOrderDto.outDate;
-      }
-      if (updateOrderDto.active !== undefined) {
+      if (updateOrderDto.active !== undefined)
         order.active = updateOrderDto.active;
-      }
 
-      // Update relations if provided
-      if (updateOrderDto.client !== undefined) {
-        const client = await this.clientService.getClientById(
-          updateOrderDto.client,
-        );
-        if (!client)
-          throw new NotFoundException(
-            `Client with id ${updateOrderDto.client} not found`,
-          );
-        order.client = client;
-      }
-
-      if (updateOrderDto.vehicule !== undefined) {
-        const vehicule = await this.vehiculeService.getVehiculeById(
-          updateOrderDto.vehicule,
-        );
-        if (!vehicule)
-          throw new NotFoundException(
-            `Vehicule with id ${updateOrderDto.vehicule} not found`,
-          );
-        order.vehicule = vehicule;
-      }
-
-      if (updateOrderDto.orderStatus !== undefined) {
-        const orderStatus = await this.orderStatusRepository.findOne({
+      // 3. Actualizar estado de la orden
+      if (updateOrderDto.orderStatus) {
+        const orderStatus = await queryRunner.manager.findOne(OrderStatus, {
           where: { idOrderStatus: updateOrderDto.orderStatus },
         });
         if (!orderStatus)
@@ -246,20 +233,36 @@ export class OrderService {
         order.orderStatus = orderStatus;
       }
 
-      if (updateOrderDto.pricings !== undefined) {
-        const pricings = await Promise.all(
-          updateOrderDto.pricings.map(async (id) => {
-            const pricing = await this.pricingService.getPricingById(id);
-            if (!pricing)
-              throw new NotFoundException(`Pricing with id ${id} not found`);
-            return pricing;
-          }),
+      // 4. Actualizar cliente
+      if (updateOrderDto.client) {
+        order.client = await this.clientService.updateClient(
+          order.client.idClient,
+          updateOrderDto.client,
+          queryRunner.manager,
         );
-        order.pricings = pricings;
       }
 
-      if (updateOrderDto.sparePartMaterials !== undefined) {
-        const sparePartMaterials = await Promise.all(
+      // 5. Actualizar vehículo
+      if (updateOrderDto.vehicule) {
+        order.vehicule = await this.vehiculeService.updateVehicule(
+          order.vehicule.idVehicule,
+          updateOrderDto.vehicule,
+          queryRunner.manager,
+        );
+      }
+
+      // 6. Actualizar pricings (reemplaza todos si se envía el array)
+      if (updateOrderDto.pricings) {
+        order.pricings = await Promise.all(
+          updateOrderDto.pricings.map((pricingDto) =>
+            this.pricingService.createPricing(pricingDto, queryRunner.manager),
+          ),
+        );
+      }
+
+      // 7. Actualizar sparePartMaterials (reemplaza todos si se envía el array)
+      if (updateOrderDto.sparePartMaterials) {
+        order.sparePartMaterials = await Promise.all(
           updateOrderDto.sparePartMaterials.map(async (id) => {
             const spm =
               await this.sparePartMaterialService.getSparepartMaterialById(id);
@@ -270,11 +273,11 @@ export class OrderService {
             return spm;
           }),
         );
-        order.sparePartMaterials = sparePartMaterials;
       }
 
-      if (updateOrderDto.manpowers !== undefined) {
-        const manpowers = await Promise.all(
+      // 8. Actualizar manpowers (reemplaza todos si se envía el array)
+      if (updateOrderDto.manpowers) {
+        order.manpowers = await Promise.all(
           updateOrderDto.manpowers.map(async (id) => {
             const manpower = await this.manpowerService.getManpowerById(id);
             if (!manpower)
@@ -282,18 +285,20 @@ export class OrderService {
             return manpower;
           }),
         );
-        order.manpowers = manpowers;
       }
 
-      // Save and return the updated order
-      return await this.orderRepository.save(order);
+      // 9. Guardar la orden actualizada
+      const updatedOrder = await queryRunner.manager.save(Order, order);
+
+      await queryRunner.commitTransaction();
+      return updatedOrder;
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
+      await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
         'Unexpected error while updating order',
       );
+    } finally {
+      await queryRunner.release();
     }
   }
 

@@ -8,7 +8,7 @@ import { CreatePricingDto } from './dto/create-pricing.dto';
 import { UpdatePricingDto } from './dto/update-pricing.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pricing } from './entities/pricing.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -18,7 +18,10 @@ export class PricingService {
     private readonly pricingRepository: Repository<Pricing>,
     private readonly userService: UserService,
   ) {}
-  async createPricing(createPricingDto: CreatePricingDto) {
+  async createPricing(
+    createPricingDto: CreatePricingDto,
+    manager?: EntityManager,
+  ) {
     try {
       // Find the user who is pricing
       const user = await this.userService.getUserById(
@@ -30,13 +33,17 @@ export class PricingService {
         );
       }
 
-      const newPricing = this.pricingRepository.create({
+      const repo = manager
+        ? manager.getRepository(Pricing)
+        : this.pricingRepository;
+
+      const newPricing = repo.create({
         pricingNumber: createPricingDto.pricingNumber,
         pricingDate: createPricingDto.pricingDate,
         pricedBy: user,
       });
 
-      return await this.pricingRepository.save(newPricing);
+      return await repo.save(newPricing);
     } catch (error) {
       this.handleDBExceptions(error);
     }

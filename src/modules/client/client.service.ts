@@ -7,7 +7,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from './entities/client.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { DocumentType } from '../document-type/entities/document-type.entity';
 
 @Injectable()
@@ -18,11 +18,22 @@ export class ClientService {
     @InjectRepository(DocumentType)
     private readonly documentTypeRepository: Repository<DocumentType>,
   ) {}
-  async createClient(createClientDto: CreateClientDto): Promise<Client> {
+
+  async createClient(
+    createClientDto: CreateClientDto,
+    manager?: EntityManager,
+  ): Promise<Client> {
     const { documentType, documentNumber, ...clientDetails } = createClientDto;
 
     // Find the DocumentType entity
-    const selectedDocumentType = await this.documentTypeRepository.findOneBy({
+    const documentTypeRepo = manager
+      ? manager.getRepository(DocumentType)
+      : this.documentTypeRepository;
+    const clientRepo = manager
+      ? manager.getRepository(Client)
+      : this.clientRepository;
+
+    const selectedDocumentType = await documentTypeRepo.findOneBy({
       idDocumentType: documentType,
     });
 
@@ -33,7 +44,7 @@ export class ClientService {
     }
 
     // Create a new client
-    const client = this.clientRepository.create({
+    const client = clientRepo.create({
       ...clientDetails,
       document: {
         documentType: selectedDocumentType,
@@ -42,7 +53,7 @@ export class ClientService {
     });
 
     // Save the client entity to the database
-    return await this.clientRepository.save(client);
+    return await clientRepo.save(client);
   }
 
   async getClientsPaginated({
@@ -90,9 +101,17 @@ export class ClientService {
   async updateClient(
     id: string,
     updateClientDto: UpdateClientDto,
+    manager?: EntityManager,
   ): Promise<Client> {
+    const repo = manager
+      ? manager.getRepository(Client)
+      : this.clientRepository;
+    const documentTypeRepo = manager
+      ? manager.getRepository(DocumentType)
+      : this.documentTypeRepository;
+
     // Find the existing client
-    const client = await this.clientRepository.findOne({
+    const client = await repo.findOne({
       where: { idClient: id },
       relations: ['document'],
     });
@@ -107,10 +126,9 @@ export class ClientService {
         client.document = {} as any;
       }
       if (updateClientDto.documentType) {
-        const selectedDocumentType =
-          await this.documentTypeRepository.findOneBy({
-            idDocumentType: updateClientDto.documentType,
-          });
+        const selectedDocumentType = await documentTypeRepo.findOneBy({
+          idDocumentType: updateClientDto.documentType,
+        });
         if (!selectedDocumentType) {
           throw new BadRequestException(
             `DocumentType with ID ${updateClientDto.documentType} not found`,
@@ -129,7 +147,7 @@ export class ClientService {
     }
 
     // Save the updated client
-    return await this.clientRepository.save(client);
+    return await repo.save(client);
   }
 
   async softDeleteClient(id: string) {
