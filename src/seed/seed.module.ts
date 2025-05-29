@@ -6,6 +6,7 @@ import { RoleModule } from 'src/modules/role/role.module';
 import { UserStatusModule } from 'src/modules/user-status/user-status.module';
 import { ServiceTypeModule } from 'src/modules/service-type/service-type.module';
 import { OrderStatusModule } from 'src/modules/order-status/order-status.module';
+import { VehiculeTypeModule } from 'src/modules/vehicule-type/vehicule-type.module';
 
 @Module({
   controllers: [SeedController],
@@ -16,6 +17,7 @@ import { OrderStatusModule } from 'src/modules/order-status/order-status.module'
     UserStatusModule,
     ServiceTypeModule,
     OrderStatusModule,
+    VehiculeTypeModule,
   ],
 })
 export class SeedModule {}
