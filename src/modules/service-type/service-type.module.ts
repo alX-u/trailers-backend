@@ -6,7 +6,7 @@ import { ServiceTypeController } from './service-type.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ServiceType])],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, ServiceTypeService],
   providers: [ServiceTypeService],
   controllers: [ServiceTypeController],
 })

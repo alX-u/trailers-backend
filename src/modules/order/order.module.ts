@@ -9,6 +9,7 @@ import { PricingModule } from '../pricing/pricing.module';
 import { SparePartMaterialModule } from '../spare-part-material/spare-part-material.module';
 import { ManpowerModule } from '../manpower/manpower.module';
 import { OrderStatusModule } from '../order-status/order-status.module';
+import { ServiceTypeModule } from '../service-type/service-type.module';
 
 @Module({
   controllers: [OrderController],
@@ -21,6 +22,7 @@ import { OrderStatusModule } from '../order-status/order-status.module';
     SparePartMaterialModule,
     ManpowerModule,
     OrderStatusModule,
+    ServiceTypeModule,
   ],
   exports: [TypeOrmModule],
 })
