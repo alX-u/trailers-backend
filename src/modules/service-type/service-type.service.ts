@@ -13,4 +13,10 @@ export class ServiceTypeService {
   async getAllServiceTypes() {
     return await this.serviceTypeRepository.find();
   }
+
+  async getServiceTypeById(id: string) {
+    return await this.serviceTypeRepository.findOne({
+      where: { idServiceType: id },
+    });
+  }
 }

@@ -22,6 +22,10 @@ export class CreateOrderDto {
   @IsNotEmpty()
   orderStatus: string;
 
+  @IsUUID('all', { each: true })
+  @IsNotEmpty()
+  serviceTypes: string[];
+
   @IsObject()
   @IsNotEmpty()
   client: CreateClientDto;

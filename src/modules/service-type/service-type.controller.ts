@@ -9,4 +9,9 @@ export class ServiceTypeController {
   getAllServiceTypes() {
     return this.serviceTypeService.getAllServiceTypes();
   }
+
+  @Get(':id')
+  getServiceTypeById(id: string) {
+    return this.serviceTypeService.getServiceTypeById(id);
+  }
 }

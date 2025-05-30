@@ -14,6 +14,7 @@ import { SparePartMaterialService } from '../spare-part-material/spare-part-mate
 import { ManpowerService } from '../manpower/manpower.service';
 import { OrderStatus } from '../order-status/entities/order-status.entity';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { ServiceTypeService } from '../service-type/service-type.service';
 
 @Injectable()
 export class OrderService {
@@ -27,6 +28,7 @@ export class OrderService {
     private readonly pricingService: PricingService,
     private readonly sparePartMaterialService: SparePartMaterialService,
     private readonly manpowerService: ManpowerService,
+    private readonly serviceTypeService: ServiceTypeService,
   ) {}
   async createOrder(createOrderDto: CreateOrderDto) {
     const connection = this.orderRepository.manager.connection;
@@ -58,7 +60,16 @@ export class OrderService {
         );
 
       // 4. Resolver relaciones many-to-many
-      // 4. Crear los pricings dentro de la transacción
+      const serviceTypes = await Promise.all(
+        (createOrderDto.serviceTypes || []).map(async (id) => {
+          const spm = await this.serviceTypeService.getServiceTypeById(id);
+          if (!spm)
+            throw new NotFoundException(`ServiceType with id ${id} not found`);
+          return spm;
+        }),
+      );
+
+      // Crear los pricings dentro de la transacción
       const pricings = await Promise.all(
         (createOrderDto.pricings || []).map(async (pricingDto) => {
           return await this.pricingService.createPricing(
@@ -94,6 +105,7 @@ export class OrderService {
         orderNumber: createOrderDto.orderNumber,
         outDate: createOrderDto.outDate,
         orderStatus,
+        serviceTypes,
         client,
         vehicule,
         pricings,
@@ -283,6 +295,20 @@ export class OrderService {
             if (!manpower)
               throw new NotFoundException(`Manpower with id ${id} not found`);
             return manpower;
+          }),
+        );
+      }
+
+      // 9. Actualizar serviceTypes (reemplaza todos si se envía el array)
+      if (updateOrderDto.serviceTypes) {
+        order.serviceTypes = await Promise.all(
+          updateOrderDto.serviceTypes.map(async (id) => {
+            const spm = await this.serviceTypeService.getServiceTypeById(id);
+            if (!spm)
+              throw new NotFoundException(
+                `ServiceType with id ${id} not found`,
+              );
+            return spm;
           }),
         );
       }
