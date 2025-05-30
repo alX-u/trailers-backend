@@ -1,5 +1,5 @@
 import {
-  IsDate,
+  IsDateString,
   IsNotEmpty,
   IsObject,
   IsString,
@@ -14,7 +14,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   orderNumber: string;
 
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
   outDate: Date;
 
