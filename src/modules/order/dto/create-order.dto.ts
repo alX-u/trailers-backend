@@ -23,7 +23,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   orderStatus: string;
 
-  @IsUUID('all', { each: true })
+  @IsArray()
   @IsNotEmpty()
   serviceTypes: string[];
 
@@ -35,6 +35,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   vehicule: CreateVehiculeDto;
 
+  @IsArray()
   @IsNotEmpty()
   pricings: CreatePricingDto[];
 

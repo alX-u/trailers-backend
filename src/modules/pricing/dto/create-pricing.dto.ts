@@ -1,11 +1,11 @@
-import { IsDate, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 export class CreatePricingDto {
   @IsString()
   @IsNotEmpty()
   pricingNumber: string;
 
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
   pricingDate: Date;
 

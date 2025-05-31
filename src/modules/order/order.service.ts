@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -40,6 +41,17 @@ export class OrderService {
     await queryRunner.startTransaction();
 
     try {
+      // Validaciones adicionales
+      if (!createOrderDto.sparePartMaterials?.length) {
+        throw new BadRequestException('sparePartMaterials cannot be empty');
+      }
+      if (!createOrderDto.manpowers?.length) {
+        throw new BadRequestException('manpowers cannot be empty');
+      }
+      if (!createOrderDto.totals) {
+        throw new BadRequestException('totals is required');
+      }
+
       // 1. Crear cliente
       const client = await this.clientService.createClient(
         createOrderDto.client,
@@ -74,8 +86,13 @@ export class OrderService {
       // 5. Crear los pricings dentro de la transacción
       const pricings = await Promise.all(
         (createOrderDto.pricings || []).map(async (pricingDto) => {
+          // Conversión de fecha si es string
+          const dto = {
+            ...pricingDto,
+            pricingDate: new Date(pricingDto.pricingDate),
+          };
           return await this.pricingService.createPricing(
-            pricingDto,
+            dto,
             queryRunner.manager,
           );
         }),
@@ -125,7 +142,7 @@ export class OrderService {
       // 8. Crear la orden
       const order = queryRunner.manager.create(Order, {
         orderNumber: createOrderDto.orderNumber,
-        outDate: createOrderDto.outDate,
+        outDate: new Date(createOrderDto.outDate), // Conversión aquí
         orderStatus,
         serviceTypes,
         client,
@@ -143,6 +160,7 @@ export class OrderService {
       await queryRunner.commitTransaction();
       return savedOrder;
     } catch (error) {
+      // Puedes loggear el error aquí si lo deseas
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
         'Unexpected error while creating order',
@@ -253,7 +271,7 @@ export class OrderService {
       if (updateOrderDto.orderNumber !== undefined)
         order.orderNumber = updateOrderDto.orderNumber;
       if (updateOrderDto.outDate !== undefined)
-        order.outDate = updateOrderDto.outDate;
+        order.outDate = new Date(updateOrderDto.outDate);
       if (updateOrderDto.active !== undefined)
         order.active = updateOrderDto.active;
       if (updateOrderDto.totals !== undefined)
@@ -292,9 +310,13 @@ export class OrderService {
       // 6. Actualizar pricings (reemplaza todos si se envía el array)
       if (updateOrderDto.pricings) {
         order.pricings = await Promise.all(
-          updateOrderDto.pricings.map((pricingDto) =>
-            this.pricingService.createPricing(pricingDto, queryRunner.manager),
-          ),
+          updateOrderDto.pricings.map((pricingDto) => {
+            const dto = {
+              ...pricingDto,
+              pricingDate: new Date(pricingDto.pricingDate),
+            };
+            return this.pricingService.createPricing(dto, queryRunner.manager);
+          }),
         );
       }
 
