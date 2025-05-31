@@ -14,14 +14,14 @@ export class OrderManpower {
   manpower: Manpower;
 
   @Column('float')
-  totalCost: number;
+  costoTotal: number;
 
   @Column('float')
-  sellFactor: number;
+  factorVenta: number;
 
   @Column('float')
-  unitSell: number;
+  ventaUnitaria: number;
 
   @Column('float')
-  totalSell: number;
+  ventaTotal: number;
 }
