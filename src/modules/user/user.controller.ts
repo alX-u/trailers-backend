@@ -36,6 +36,11 @@ export class UserController {
     return this.userService.getUserById(id);
   }
 
+  @Get('document/:documentNumber')
+  getUserByDocumentNumber(@Param('documentNumber') documentNumber: string) {
+    return this.userService.getUserByDocumentNumber(documentNumber);
+  }
+
   // Update a user by ID
   @Patch(':id')
   updateUser(

@@ -88,7 +88,7 @@ export class ClientService {
   async getClientById(id: string): Promise<Client> {
     const client = await this.clientRepository.findOne({
       where: { idClient: id },
-      relations: ['document', 'orders', 'contacts'],
+      relations: ['document'],
     });
 
     if (!client) {
@@ -96,6 +96,22 @@ export class ClientService {
     }
 
     return client;
+  }
+
+  async getClientByDocumentNumber(documentNumber: string) {
+    return await this.clientRepository
+      .findOne({
+        where: { document: { documentNumber } },
+        relations: ['document'],
+      })
+      .then((client) => {
+        if (!client) {
+          throw new NotFoundException(
+            `Client with document number ${documentNumber} not found`,
+          );
+        }
+        return client;
+      });
   }
 
   async updateClient(

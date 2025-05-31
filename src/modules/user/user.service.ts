@@ -152,6 +152,25 @@ export class UserService {
     }
   }
 
+  async getUserByDocumentNumber(documentNumber: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { document: { documentNumber } },
+        relations: ['role', 'userStatus', 'document'],
+      });
+
+      if (!user) {
+        throw new NotFoundException(
+          `User with document number ${documentNumber} not found`,
+        );
+      }
+
+      return user;
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
+  }
+
   async updateUser(id: string, updateUserDto: UpdateUserDto) {
     try {
       // Find the existing user

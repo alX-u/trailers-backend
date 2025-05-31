@@ -35,6 +35,11 @@ export class ClientController {
     return this.clientService.getClientById(id);
   }
 
+  @Get('document/:documentNumber')
+  findClientByDocumentNumber(@Param('documentNumber') documentNumber: string) {
+    return this.clientService.getClientByDocumentNumber(documentNumber);
+  }
+
   @Patch(':id')
   updateClient(
     @Param('id', ParseUUIDPipe) id: string,
