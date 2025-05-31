@@ -15,6 +15,9 @@ export class OrderSparePartMaterial {
   @ManyToOne(() => SparePartMaterial, { eager: true })
   sparePartMaterial: SparePartMaterial;
 
+  @Column({ nullable: true })
+  cantidad: number;
+
   @Column('float')
   costoTotal: number;
 

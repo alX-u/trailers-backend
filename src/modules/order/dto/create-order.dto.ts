@@ -43,6 +43,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   sparePartMaterials: {
     sparePartMaterial: string;
+    cantidad: number;
     costoTotal: number;
     factorVenta: number;
     ventaUnitaria: number;

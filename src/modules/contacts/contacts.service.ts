@@ -83,6 +83,8 @@ export class ContactsService {
       contact.name = updateContactDto.name;
     if (updateContactDto.phoneNumber !== undefined)
       contact.phoneNumber = updateContactDto.phoneNumber;
+    if (updateContactDto.email !== undefined)
+      contact.email = updateContactDto.email;
     if (updateContactDto.isPrincipalContact !== undefined)
       contact.isPrincipalContact = updateContactDto.isPrincipalContact;
     if (updateContactDto.active !== undefined)

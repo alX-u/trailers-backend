@@ -20,6 +20,9 @@ export class Contact {
   @Column()
   phoneNumber: string;
 
+  @Column({ nullable: true })
+  email: string;
+
   @ManyToOne(() => Client, (client) => client.idClient)
   @JoinColumn({ name: 'client' })
   client: Client;

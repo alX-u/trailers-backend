@@ -10,6 +10,9 @@ export class CreateContactDto {
   phoneNumber: string;
 
   @IsString()
+  email: string;
+
+  @IsString()
   @IsUUID()
   @IsNotEmpty()
   client: string;

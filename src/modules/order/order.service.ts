@@ -111,6 +111,7 @@ export class OrderService {
             );
           return queryRunner.manager.create(OrderSparePartMaterial, {
             sparePartMaterial: spmEntity,
+            cantidad: spmDto.cantidad,
             costoTotal: spmDto.costoTotal,
             factorVenta: spmDto.factorVenta,
             ventaUnitaria: spmDto.ventaUnitaria,
@@ -185,11 +186,15 @@ export class OrderService {
         where: { active: true },
         relations: [
           'client',
+          'client.document',
           'vehicule',
+          'vehicule.driver',
           'orderStatus',
           'pricings',
           'sparePartMaterials',
           'manpowers',
+          'manpowers.manpower',
+          'manpowers.manpower.contractor',
           'billings',
           'serviceTypes',
         ],
@@ -217,11 +222,15 @@ export class OrderService {
         where: { idOrder: id, active: true },
         relations: [
           'client',
+          'client.document',
           'vehicule',
+          'vehicule.driver',
           'orderStatus',
           'pricings',
           'sparePartMaterials',
           'manpowers',
+          'manpowers.manpower',
+          'manpowers.manpower.contractor',
           'billings',
           'serviceTypes',
         ],
@@ -339,6 +348,7 @@ export class OrderService {
             return queryRunner.manager.create(OrderSparePartMaterial, {
               order,
               sparePartMaterial: spmEntity,
+              cantidad: spmDto.cantidad,
               costoTotal: spmDto.costoTotal,
               factorVenta: spmDto.factorVenta,
               ventaUnitaria: spmDto.ventaUnitaria,
