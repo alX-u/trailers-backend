@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDateString,
   IsNotEmpty,
   IsObject,
@@ -37,7 +38,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   pricings: CreatePricingDto[];
 
-  @IsObject()
+  @IsArray()
   @IsNotEmpty()
   sparePartMaterials: {
     sparePartMaterial: string;
@@ -47,7 +48,7 @@ export class CreateOrderDto {
     ventaTotal: number;
   }[];
 
-  @IsObject()
+  @IsArray()
   @IsNotEmpty()
   manpowers: {
     manpower: string;
