@@ -86,11 +86,11 @@ export class OrderService {
         (createOrderDto.sparePartMaterials || []).map(async (spmDto) => {
           const spmEntity =
             await this.sparePartMaterialService.getSparepartMaterialById(
-              spmDto.idSparePartMaterial,
+              spmDto.sparePartMaterial,
             );
           if (!spmEntity)
             throw new NotFoundException(
-              `SparePartMaterial with id ${spmDto.idSparePartMaterial} not found`,
+              `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
             );
           return queryRunner.manager.create(OrderSparePartMaterial, {
             sparePartMaterial: spmEntity,
@@ -106,11 +106,11 @@ export class OrderService {
       const manpowers = await Promise.all(
         (createOrderDto.manpowers || []).map(async (mpDto) => {
           const mpEntity = await this.manpowerService.getManpowerById(
-            mpDto.idManpower,
+            mpDto.manpower,
           );
           if (!mpEntity)
             throw new NotFoundException(
-              `Manpower with id ${mpDto.idManpower} not found`,
+              `Manpower with id ${mpDto.manpower} not found`,
             );
           return queryRunner.manager.create(OrderManpower, {
             manpower: mpEntity,
@@ -308,11 +308,11 @@ export class OrderService {
           updateOrderDto.sparePartMaterials.map(async (spmDto) => {
             const spmEntity =
               await this.sparePartMaterialService.getSparepartMaterialById(
-                spmDto.idSparePartMaterial,
+                spmDto.sparePartMaterial,
               );
             if (!spmEntity)
               throw new NotFoundException(
-                `SparePartMaterial with id ${spmDto.idSparePartMaterial} not found`,
+                `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
               );
             return queryRunner.manager.create(OrderSparePartMaterial, {
               order,
@@ -335,11 +335,11 @@ export class OrderService {
         order.manpowers = await Promise.all(
           updateOrderDto.manpowers.map(async (mpDto) => {
             const mpEntity = await this.manpowerService.getManpowerById(
-              mpDto.idManpower,
+              mpDto.manpower,
             );
             if (!mpEntity)
               throw new NotFoundException(
-                `Manpower with id ${mpDto.idManpower} not found`,
+                `Manpower with id ${mpDto.manpower} not found`,
               );
             return queryRunner.manager.create(OrderManpower, {
               order,

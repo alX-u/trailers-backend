@@ -40,7 +40,7 @@ export class CreateOrderDto {
   @IsObject()
   @IsNotEmpty()
   sparePartMaterials: {
-    idSparePartMaterial: string;
+    sparePartMaterial: string;
     costoTotal: number;
     factorVenta: number;
     ventaUnitaria: number;
@@ -50,7 +50,7 @@ export class CreateOrderDto {
   @IsObject()
   @IsNotEmpty()
   manpowers: {
-    idManpower: string;
+    manpower: string;
     costoTotal: number;
     factorVenta: number;
     ventaUnitaria: number;
