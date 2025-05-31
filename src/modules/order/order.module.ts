@@ -10,12 +10,14 @@ import { SparePartMaterialModule } from '../spare-part-material/spare-part-mater
 import { ManpowerModule } from '../manpower/manpower.module';
 import { OrderStatusModule } from '../order-status/order-status.module';
 import { ServiceTypeModule } from '../service-type/service-type.module';
+import { OrderManpower } from './entities/order-manpower.entity';
+import { OrderSparePartMaterial } from './entities/order-spare-part-material.entity';
 
 @Module({
   controllers: [OrderController],
   providers: [OrderService],
   imports: [
-    TypeOrmModule.forFeature([Order]),
+    TypeOrmModule.forFeature([Order, OrderManpower, OrderSparePartMaterial]),
     ClientModule,
     VehiculeModule,
     PricingModule,

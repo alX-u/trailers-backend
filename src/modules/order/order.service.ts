@@ -15,6 +15,8 @@ import { ManpowerService } from '../manpower/manpower.service';
 import { OrderStatus } from '../order-status/entities/order-status.entity';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { ServiceTypeService } from '../service-type/service-type.service';
+import { OrderSparePartMaterial } from './entities/order-spare-part-material.entity';
+import { OrderManpower } from './entities/order-manpower.entity';
 
 @Injectable()
 export class OrderService {
@@ -62,14 +64,14 @@ export class OrderService {
       // 4. Resolver relaciones many-to-many
       const serviceTypes = await Promise.all(
         (createOrderDto.serviceTypes || []).map(async (id) => {
-          const spm = await this.serviceTypeService.getServiceTypeById(id);
-          if (!spm)
+          const st = await this.serviceTypeService.getServiceTypeById(id);
+          if (!st)
             throw new NotFoundException(`ServiceType with id ${id} not found`);
-          return spm;
+          return st;
         }),
       );
 
-      // Crear los pricings dentro de la transacción
+      // 5. Crear los pricings dentro de la transacción
       const pricings = await Promise.all(
         (createOrderDto.pricings || []).map(async (pricingDto) => {
           return await this.pricingService.createPricing(
@@ -79,28 +81,48 @@ export class OrderService {
         }),
       );
 
+      // 6. Crear entidades pivot para sparePartMaterials
       const sparePartMaterials = await Promise.all(
-        (createOrderDto.sparePartMaterials || []).map(async (id) => {
-          const spm =
-            await this.sparePartMaterialService.getSparepartMaterialById(id);
-          if (!spm)
-            throw new NotFoundException(
-              `SparePartMaterial with id ${id} not found`,
+        (createOrderDto.sparePartMaterials || []).map(async (spmDto) => {
+          const spmEntity =
+            await this.sparePartMaterialService.getSparepartMaterialById(
+              spmDto.idSparePartMaterial,
             );
-          return spm;
+          if (!spmEntity)
+            throw new NotFoundException(
+              `SparePartMaterial with id ${spmDto.idSparePartMaterial} not found`,
+            );
+          return queryRunner.manager.create(OrderSparePartMaterial, {
+            sparePartMaterial: spmEntity,
+            costoTotal: spmDto.costoTotal,
+            factorVenta: spmDto.factorVenta,
+            ventaUnitaria: spmDto.ventaUnitaria,
+            ventaTotal: spmDto.ventaTotal,
+          });
         }),
       );
 
+      // 7. Crear entidades pivot para manpowers
       const manpowers = await Promise.all(
-        (createOrderDto.manpowers || []).map(async (id) => {
-          const manpower = await this.manpowerService.getManpowerById(id);
-          if (!manpower)
-            throw new NotFoundException(`Manpower with id ${id} not found`);
-          return manpower;
+        (createOrderDto.manpowers || []).map(async (mpDto) => {
+          const mpEntity = await this.manpowerService.getManpowerById(
+            mpDto.idManpower,
+          );
+          if (!mpEntity)
+            throw new NotFoundException(
+              `Manpower with id ${mpDto.idManpower} not found`,
+            );
+          return queryRunner.manager.create(OrderManpower, {
+            manpower: mpEntity,
+            costoTotal: mpDto.costoTotal,
+            factorVenta: mpDto.factorVenta,
+            ventaUnitaria: mpDto.ventaUnitaria,
+            ventaTotal: mpDto.ventaTotal,
+          });
         }),
       );
 
-      // 5. Crear la orden
+      // 8. Crear la orden
       const order = queryRunner.manager.create(Order, {
         orderNumber: createOrderDto.orderNumber,
         outDate: createOrderDto.outDate,
@@ -111,10 +133,11 @@ export class OrderService {
         pricings,
         sparePartMaterials,
         manpowers,
+        total: createOrderDto.totals,
         active: true,
       });
 
-      // 6. Guardar la orden
+      // 9. Guardar la orden
       const savedOrder = await queryRunner.manager.save(Order, order);
 
       await queryRunner.commitTransaction();
@@ -219,6 +242,7 @@ export class OrderService {
           'pricings',
           'sparePartMaterials',
           'manpowers',
+          'serviceTypes',
         ],
       });
       if (!order) {
@@ -232,6 +256,8 @@ export class OrderService {
         order.outDate = updateOrderDto.outDate;
       if (updateOrderDto.active !== undefined)
         order.active = updateOrderDto.active;
+      if (updateOrderDto.totals !== undefined)
+        order.total = updateOrderDto.totals;
 
       // 3. Actualizar estado de la orden
       if (updateOrderDto.orderStatus) {
@@ -272,29 +298,57 @@ export class OrderService {
         );
       }
 
-      // 7. Actualizar sparePartMaterials (reemplaza todos si se envía el array)
+      // 7. Actualizar sparePartMaterials (entidades pivot)
       if (updateOrderDto.sparePartMaterials) {
+        await queryRunner.manager.delete(OrderSparePartMaterial, {
+          order: { idOrder: id },
+        });
+
         order.sparePartMaterials = await Promise.all(
-          updateOrderDto.sparePartMaterials.map(async (id) => {
-            const spm =
-              await this.sparePartMaterialService.getSparepartMaterialById(id);
-            if (!spm)
-              throw new NotFoundException(
-                `SparePartMaterial with id ${id} not found`,
+          updateOrderDto.sparePartMaterials.map(async (spmDto) => {
+            const spmEntity =
+              await this.sparePartMaterialService.getSparepartMaterialById(
+                spmDto.idSparePartMaterial,
               );
-            return spm;
+            if (!spmEntity)
+              throw new NotFoundException(
+                `SparePartMaterial with id ${spmDto.idSparePartMaterial} not found`,
+              );
+            return queryRunner.manager.create(OrderSparePartMaterial, {
+              order,
+              sparePartMaterial: spmEntity,
+              costoTotal: spmDto.costoTotal,
+              factorVenta: spmDto.factorVenta,
+              ventaUnitaria: spmDto.ventaUnitaria,
+              ventaTotal: spmDto.ventaTotal,
+            });
           }),
         );
       }
 
-      // 8. Actualizar manpowers (reemplaza todos si se envía el array)
+      // 8. Actualizar manpowers (entidades pivot)
       if (updateOrderDto.manpowers) {
+        await queryRunner.manager.delete(OrderManpower, {
+          order: { idOrder: id },
+        });
+
         order.manpowers = await Promise.all(
-          updateOrderDto.manpowers.map(async (id) => {
-            const manpower = await this.manpowerService.getManpowerById(id);
-            if (!manpower)
-              throw new NotFoundException(`Manpower with id ${id} not found`);
-            return manpower;
+          updateOrderDto.manpowers.map(async (mpDto) => {
+            const mpEntity = await this.manpowerService.getManpowerById(
+              mpDto.idManpower,
+            );
+            if (!mpEntity)
+              throw new NotFoundException(
+                `Manpower with id ${mpDto.idManpower} not found`,
+              );
+            return queryRunner.manager.create(OrderManpower, {
+              order,
+              manpower: mpEntity,
+              costoTotal: mpDto.costoTotal,
+              factorVenta: mpDto.factorVenta,
+              ventaUnitaria: mpDto.ventaUnitaria,
+              ventaTotal: mpDto.ventaTotal,
+            });
           }),
         );
       }
@@ -303,17 +357,17 @@ export class OrderService {
       if (updateOrderDto.serviceTypes) {
         order.serviceTypes = await Promise.all(
           updateOrderDto.serviceTypes.map(async (id) => {
-            const spm = await this.serviceTypeService.getServiceTypeById(id);
-            if (!spm)
+            const st = await this.serviceTypeService.getServiceTypeById(id);
+            if (!st)
               throw new NotFoundException(
                 `ServiceType with id ${id} not found`,
               );
-            return spm;
+            return st;
           }),
         );
       }
 
-      // 9. Guardar la orden actualizada
+      // 10. Guardar la orden actualizada
       const updatedOrder = await queryRunner.manager.save(Order, order);
 
       await queryRunner.commitTransaction();

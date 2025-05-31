@@ -37,11 +37,36 @@ export class CreateOrderDto {
   @IsNotEmpty()
   pricings: CreatePricingDto[];
 
-  @IsUUID('all', { each: true })
+  @IsObject()
   @IsNotEmpty()
-  sparePartMaterials: string[];
+  sparePartMaterials: {
+    idSparePartMaterial: string;
+    costoTotal: number;
+    factorVenta: number;
+    ventaUnitaria: number;
+    ventaTotal: number;
+  }[];
 
-  @IsUUID('all', { each: true })
+  @IsObject()
   @IsNotEmpty()
-  manpowers: string[];
+  manpowers: {
+    idManpower: string;
+    costoTotal: number;
+    factorVenta: number;
+    ventaUnitaria: number;
+    ventaTotal: number;
+  }[];
+
+  @IsObject()
+  @IsNotEmpty()
+  totals: {
+    subtotalCostosRepuestos: number;
+    subtotalVentasRepuestos: number;
+    subtotalCostosManoObra: number;
+    subtotalVentasManoObra: number;
+    subtotalCostos: number;
+    subtotalVentas: number;
+    iva: number;
+    totalVenta: number;
+  };
 }

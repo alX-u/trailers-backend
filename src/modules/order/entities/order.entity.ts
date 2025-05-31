@@ -1,10 +1,8 @@
 import { Billing } from 'src/modules/billing/entities/billing.entity';
 import { Client } from 'src/modules/client/entities/client.entity';
-import { Manpower } from 'src/modules/manpower/entities/manpower.entity';
 import { OrderStatus } from 'src/modules/order-status/entities/order-status.entity';
 import { Pricing } from 'src/modules/pricing/entities/pricing.entity';
 import { ServiceType } from 'src/modules/service-type/entities/service-type.entity';
-import { SparePartMaterial } from 'src/modules/spare-part-material/entities/spare-part-material.entity';
 import { Vehicule } from 'src/modules/vehicule/entities/vehicule.entity';
 import {
   Column,
@@ -14,9 +12,12 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrderSparePartMaterial } from './order-spare-part-material.entity';
+import { OrderManpower } from './order-manpower.entity';
 
 @Entity()
 export class Order {
@@ -33,14 +34,14 @@ export class Order {
   active: boolean;
 
   //FKs
-  @ManyToOne(() => OrderStatus, (orderStatus) => orderStatus.idOrderStatus)
+  @ManyToOne(() => OrderStatus, (orderStatus) => orderStatus.orders)
   orderStatus: OrderStatus;
 
-  @ManyToOne(() => Client, (client) => client.idClient)
+  @ManyToOne(() => Client, (client) => client.orders)
   @JoinColumn({ name: 'client' })
   client: Client;
 
-  @ManyToOne(() => Vehicule, (vehicule) => vehicule.idVehicule)
+  @ManyToOne(() => Vehicule, (vehicule) => vehicule.orders)
   @JoinColumn({ name: 'vehicule' })
   vehicule: Vehicule;
 
@@ -57,18 +58,31 @@ export class Order {
   @JoinTable({ name: 'order_pricing' })
   pricings: Pricing[];
 
-  @ManyToMany(
-    () => SparePartMaterial,
-    (sparePartMaterial) => sparePartMaterial.idSparePartMaterial,
-  )
-  @JoinTable({ name: 'order_sparePartMaterial' })
-  sparePartMaterials: SparePartMaterial[];
+  // Pivot relations for extra fields
+  @OneToMany(() => OrderSparePartMaterial, (ospm) => ospm.order, {
+    cascade: true,
+    eager: true,
+  })
+  sparePartMaterials: OrderSparePartMaterial[];
 
-  @ManyToMany(() => Manpower, (manpower) => manpower.idManpower)
-  @JoinTable({ name: 'order_manpower' })
-  manpowers: Manpower[];
+  @OneToMany(() => OrderManpower, (om) => om.order, {
+    cascade: true,
+    eager: true,
+  })
+  manpowers: OrderManpower[];
 
-  //Date columns
+  @Column({ type: 'jsonb', nullable: true })
+  total: {
+    subtotalCostosRepuestos: number;
+    subtotalVentasRepuestos: number;
+    subtotalCostosManoObra: number;
+    subtotalVentasManoObra: number;
+    subtotalCostos: number;
+    subtotalVentas: number;
+    iva: number;
+    totalVenta: number;
+  };
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
