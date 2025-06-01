@@ -1,13 +1,16 @@
-import { IsDate, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 export class CreateBillingDto {
   @IsString()
   @IsNotEmpty()
   billingNumber: string;
 
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
   billingDate: Date;
+
+  @IsString()
+  actNumber: string;
 
   @IsUUID()
   @IsNotEmpty()

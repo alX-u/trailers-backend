@@ -18,6 +18,9 @@ export class Billing {
   @Column({ type: 'timestamptz' })
   billingDate: Date;
 
+  @Column()
+  actNumber: string;
+
   @Column({ default: false })
   active: boolean;
 

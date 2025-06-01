@@ -18,6 +18,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { ServiceTypeService } from '../service-type/service-type.service';
 import { OrderSparePartMaterial } from './entities/order-spare-part-material.entity';
 import { OrderManpower } from './entities/order-manpower.entity';
+import { BillingService } from '../billing/billing.service';
 
 @Injectable()
 export class OrderService {
@@ -32,6 +33,7 @@ export class OrderService {
     private readonly sparePartMaterialService: SparePartMaterialService,
     private readonly manpowerService: ManpowerService,
     private readonly serviceTypeService: ServiceTypeService,
+    private readonly billingService: BillingService, // Asegúrate de que BillingService esté importado correctamente
   ) {}
   async createOrder(createOrderDto: CreateOrderDto) {
     const connection = this.orderRepository.manager.connection;
@@ -53,16 +55,28 @@ export class OrderService {
       }
 
       // 1. Crear cliente
-      const client = await this.clientService.createClient(
-        createOrderDto.client,
-        queryRunner.manager,
-      );
+      console.log('Antes de crear cliente');
+      let client;
+      try {
+        client = await this.clientService.createClient(
+          createOrderDto.client,
+          queryRunner.manager,
+        );
+        console.log('Client created:', client);
+      } catch (error) {
+        console.error('Error creating client:', error);
+        throw new BadRequestException(
+          'Error creating client: ' + error.message,
+        );
+      }
 
       // 2. Crear vehículo
       const vehicule = await this.vehiculeService.createVehicule(
         createOrderDto.vehicule,
         queryRunner.manager,
       );
+
+      console.log('Vehicule created:', vehicule);
 
       // 3. Buscar estado de la orden
       const orderStatus = await queryRunner.manager.findOne(OrderStatus, {
@@ -72,6 +86,7 @@ export class OrderService {
         throw new NotFoundException(
           `OrderStatus with id ${createOrderDto.orderStatus} not found`,
         );
+      console.log('OrderStatus found:', orderStatus);
 
       // 4. Resolver relaciones many-to-many
       const serviceTypes = await Promise.all(
@@ -82,6 +97,7 @@ export class OrderService {
           return st;
         }),
       );
+      console.log('ServiceTypes resolved:', serviceTypes);
 
       // 5. Crear los pricings dentro de la transacción
       const pricings = await Promise.all(
@@ -92,6 +108,22 @@ export class OrderService {
             pricingDate: new Date(pricingDto.pricingDate),
           };
           return await this.pricingService.createPricing(
+            dto,
+            queryRunner.manager,
+          );
+        }),
+      );
+      console.log('Pricings created:', pricings);
+
+      //5.5. Crear los pricings dentro de la transacción
+      const billings = await Promise.all(
+        (createOrderDto.billings || []).map(async (billingDto) => {
+          // Conversión de fecha si es string
+          const dto = {
+            ...billingDto,
+            billingDate: new Date(billingDto.billingDate),
+          };
+          return await this.billingService.createBilling(
             dto,
             queryRunner.manager,
           );
@@ -119,6 +151,7 @@ export class OrderService {
           });
         }),
       );
+      console.log('SparePartMaterials created:', sparePartMaterials);
 
       // 7. Crear entidades pivot para manpowers
       const manpowers = await Promise.all(
@@ -139,6 +172,7 @@ export class OrderService {
           });
         }),
       );
+      console.log('Manpowers created:', manpowers);
 
       // 8. Crear la orden
       const order = queryRunner.manager.create(Order, {
@@ -149,6 +183,7 @@ export class OrderService {
         client,
         vehicule,
         pricings,
+        billings,
         sparePartMaterials,
         manpowers,
         total: createOrderDto.totals,
@@ -269,6 +304,7 @@ export class OrderService {
           'vehicule',
           'orderStatus',
           'pricings',
+          'billings',
           'sparePartMaterials',
           'manpowers',
           'serviceTypes',
@@ -327,6 +363,19 @@ export class OrderService {
               pricingDate: new Date(pricingDto.pricingDate),
             };
             return this.pricingService.createPricing(dto, queryRunner.manager);
+          }),
+        );
+      }
+
+      // 6.5. Actualizar billings (reemplaza todos si se envía el array)
+      if (updateOrderDto.billings) {
+        order.billings = await Promise.all(
+          updateOrderDto.billings.map((billingDto) => {
+            const dto = {
+              ...billingDto,
+              billingDate: new Date(billingDto.billingDate),
+            };
+            return this.billingService.createBilling(dto, queryRunner.manager);
           }),
         );
       }

@@ -3,7 +3,7 @@ import { CreateBillingDto } from './dto/create-billing.dto';
 import { UpdateBillingDto } from './dto/update-billing.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Billing } from './entities/billing.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 
 @Injectable()
@@ -14,11 +14,17 @@ export class BillingService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
-  async createBilling(createBillingDto: CreateBillingDto): Promise<Billing> {
+  async createBilling(
+    createBillingDto: CreateBillingDto,
+    manager?: EntityManager,
+  ): Promise<Billing> {
     const { billedBy, ...billingDetails } = createBillingDto;
 
-    //Find user
-    const selectedUser = await this.userRepository.findOneBy({
+    // Find user
+    const userRepo = manager
+      ? manager.getRepository(User)
+      : this.userRepository;
+    const selectedUser = await userRepo.findOneBy({
       idUser: billedBy,
     });
 
@@ -27,12 +33,17 @@ export class BillingService {
     }
 
     // Create a new billing entity from the DTO
-    const billing = this.billingRepository.create({
+    const repo = manager
+      ? manager.getRepository(Billing)
+      : this.billingRepository;
+
+    const billing = repo.create({
       ...billingDetails,
       billedBy: selectedUser,
     });
+
     // Save the billing entity to the database
-    return await this.billingRepository.save(billing);
+    return await repo.save(billing);
   }
   async getBillingById(id: string): Promise<Billing> {
     const billing = await this.billingRepository.findOne({

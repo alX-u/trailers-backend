@@ -6,6 +6,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
+import { CreateBillingDto } from 'src/modules/billing/dto/create-billing.dto';
 import { CreateClientDto } from 'src/modules/client/dto/create-client.dto';
 import { CreatePricingDto } from 'src/modules/pricing/dto/create-pricing.dto';
 import { CreateVehiculeDto } from 'src/modules/vehicule/dto/create-vehicule.dto';
@@ -38,6 +39,10 @@ export class CreateOrderDto {
   @IsArray()
   @IsNotEmpty()
   pricings: CreatePricingDto[];
+
+  @IsArray()
+  @IsNotEmpty()
+  billings: CreateBillingDto[];
 
   @IsArray()
   @IsNotEmpty()
