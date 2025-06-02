@@ -18,10 +18,6 @@ export class CreateSparePartMaterialDto {
   @Min(0)
   unitaryCost: number;
 
-  @IsNumber()
-  @Min(0)
-  quantity: number;
-
   @IsUUID()
   @IsNotEmpty()
   provider: string;

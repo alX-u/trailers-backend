@@ -34,6 +34,9 @@ export class User {
   @Column()
   phone: string;
 
+  @Column({ nullable: true, default: true })
+  active: boolean;
+
   //Fks
   @ManyToOne(() => Role, (role) => role.idRole)
   @JoinColumn({ name: 'role' })

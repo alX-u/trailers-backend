@@ -21,7 +21,7 @@ export class DocumentController {
   }
 
   @Delete(':id')
-  deleteDocument(@Param('id') id: string) {
-    return this.documentService.deleteDocument(id);
+  softDeleteDocument(@Param('id') id: string) {
+    return this.documentService.softDeleteDocument(id);
   }
 }

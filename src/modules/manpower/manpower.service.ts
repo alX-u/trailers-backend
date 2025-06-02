@@ -39,7 +39,7 @@ export class ManpowerService {
   async getAllManpower() {
     return await this.manpowerRepository.find({
       where: { active: true },
-      relations: ['contractor'],
+      relations: ['contractor', 'contractor.document'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -47,7 +47,7 @@ export class ManpowerService {
   async getManpowerById(id: string) {
     const manpower = await this.manpowerRepository.findOne({
       where: { idManpower: id, active: true },
-      relations: ['contractor'],
+      relations: ['contractor', 'contractor.document'],
     });
     if (!manpower) {
       throw new NotFoundException(`Manpower with id ${id} not found`);

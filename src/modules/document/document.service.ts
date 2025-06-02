@@ -66,18 +66,29 @@ export class DocumentService {
       document.documentNumber = updateDocumentDto.documentNumber;
     }
 
+    if (updateDocumentDto.active !== undefined) {
+      document.active = updateDocumentDto.active;
+    }
+
     return await this.documentRepository.save(document);
   }
 
-  async deleteDocument(id: string): Promise<{ message: string }> {
-    try {
-      await this.documentRepository.delete({ idDocument: id });
-      return { message: `Document with id ${id} deleted successfully` };
-    } catch (error) {
-      console.log(error);
+  async softDeleteDocument(id: string): Promise<{ message: string }> {
+    const document = await this.documentRepository.findOne({
+      where: { idDocument: id },
+    });
+
+    if (!document) {
       throw new NotFoundException(
         `Document with id ${id} not found or already deleted`,
       );
     }
+
+    document.active = false;
+    await this.documentRepository.save(document);
+
+    return {
+      message: `Document with id ${id} has been soft deleted (set to inactive).`,
+    };
   }
 }

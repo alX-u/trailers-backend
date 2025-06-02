@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from './entities/client.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { DocumentType } from '../document-type/entities/document-type.entity';
+import { DocumentService } from '../document/document.service';
 
 @Injectable()
 export class ClientService {
@@ -17,6 +18,7 @@ export class ClientService {
     private readonly clientRepository: Repository<Client>,
     @InjectRepository(DocumentType)
     private readonly documentTypeRepository: Repository<DocumentType>,
+    private readonly documentService: DocumentService,
   ) {}
 
   async createClient(
@@ -72,6 +74,7 @@ export class ClientService {
         take,
         skip,
         order: { createdAt: 'DESC' },
+        relations: ['document'],
       });
 
       return {
@@ -170,7 +173,7 @@ export class ClientService {
     // Find the existing client
     const client = await this.clientRepository.findOne({
       where: { idClient: id },
-      relations: ['document, orders, contacts'],
+      relations: ['document'],
     });
 
     if (!client) {
@@ -179,6 +182,15 @@ export class ClientService {
 
     // Soft delete the client
     client.active = false;
-    return await this.clientRepository.save(client);
+    await this.clientRepository.save(client);
+
+    // Soft delete the related document if exists
+    if (client.document && client.document.idDocument) {
+      await this.documentService.softDeleteDocument(client.document.idDocument);
+    }
+
+    return {
+      message: `Client with id ${id} and its document have been soft deleted.`,
+    };
   }
 }

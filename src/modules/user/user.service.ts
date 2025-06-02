@@ -14,6 +14,7 @@ import { Document } from '../document/entities/document.entity';
 import { DocumentType } from '../document-type/entities/document-type.entity';
 import { Role } from '../role/entities/role.entity';
 import { UserStatus } from '../user-status/entities/user-status.entity';
+import { DocumentService } from '../document/document.service';
 
 @Injectable()
 export class UserService {
@@ -30,6 +31,7 @@ export class UserService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserStatus)
     private readonly userStatusRepository: Repository<UserStatus>,
+    private readonly documentService: DocumentService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -253,20 +255,28 @@ export class UserService {
     }
   }
 
-  async deleteUser(id: string) {
+  async softDeleteUser(id: string) {
     try {
       const user = await this.userRepository.findOne({
         where: { idUser: id },
+        relations: ['document'],
       });
 
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
 
-      await this.userRepository.remove(user);
+      // Soft delete the user
+      user.active = false;
+      await this.userRepository.save(user);
+
+      // Soft delete the related document if exists
+      if (user.document && user.document.idDocument) {
+        await this.documentService.softDeleteDocument(user.document.idDocument);
+      }
 
       return {
-        message: `User with ID ${id} has been deleted successfully.`,
+        message: `User with ID ${id} and its document have been soft deleted (set to inactive).`,
         user,
       };
     } catch (error) {

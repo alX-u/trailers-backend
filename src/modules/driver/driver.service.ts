@@ -101,6 +101,7 @@ export class DriverService {
   async softDeleteDriver(id: string) {
     const driver = await this.driverRepository.findOne({
       where: { idDriver: id, active: true },
+      relations: ['document'],
     });
     if (!driver) {
       throw new NotFoundException(
@@ -109,8 +110,14 @@ export class DriverService {
     }
     driver.active = false;
     await this.driverRepository.save(driver);
+
+    // Soft delete the related document if exists
+    if (driver.document && driver.document.idDocument) {
+      await this.documentService.softDeleteDocument(driver.document.idDocument);
+    }
+
     return {
-      message: `Driver #${id} has been soft deleted (set to inactive).`,
+      message: `Driver #${id} and its document have been soft deleted (set to inactive).`,
     };
   }
 }

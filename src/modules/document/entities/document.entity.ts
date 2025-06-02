@@ -17,6 +17,9 @@ export class Document {
   @Column({ unique: true })
   documentNumber: string;
 
+  @Column({ nullable: true, default: true })
+  active: boolean;
+
   @ManyToOne(() => DocumentType, (document) => document.idDocumentType)
   @JoinColumn({ name: 'documentType' })
   documentType: DocumentType;

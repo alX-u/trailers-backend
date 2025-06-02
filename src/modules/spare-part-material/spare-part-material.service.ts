@@ -45,7 +45,7 @@ export class SparePartMaterialService {
 
   async getAllSparepartMaterials(filter?: string) {
     try {
-      const whereClause = filter === 'Activo' ? { active: true } : {}; // Empty object means no filter
+      const whereClause = filter === 'Activo' ? { active: true } : {};
 
       const [items, total] =
         await this.sparePartMaterialRepository.findAndCount({
@@ -126,8 +126,6 @@ export class SparePartMaterialService {
           updateSparePartMaterialDto.measurementUnit;
       if (updateSparePartMaterialDto.unitaryCost !== undefined)
         sparePartMaterial.unitaryCost = updateSparePartMaterialDto.unitaryCost;
-      if (updateSparePartMaterialDto.quantity !== undefined)
-        sparePartMaterial.quantity = updateSparePartMaterialDto.quantity;
       if (updateSparePartMaterialDto.active !== undefined)
         sparePartMaterial.active = updateSparePartMaterialDto.active;
 

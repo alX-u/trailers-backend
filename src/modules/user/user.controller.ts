@@ -52,7 +52,7 @@ export class UserController {
 
   // Delete a user by ID
   @Delete(':id')
-  deleteUser(@Param('id', ParseUUIDPipe) id: string) {
-    return this.userService.deleteUser(id);
+  softDeleteUser(@Param('id', ParseUUIDPipe) id: string) {
+    return this.userService.softDeleteUser(id);
   }
 }

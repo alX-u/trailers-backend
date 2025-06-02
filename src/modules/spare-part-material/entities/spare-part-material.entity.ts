@@ -26,9 +26,6 @@ export class SparePartMaterial {
   @Column()
   unitaryCost: number;
 
-  @Column()
-  quantity: number;
-
   @Column({ default: true })
   active: boolean;
 
