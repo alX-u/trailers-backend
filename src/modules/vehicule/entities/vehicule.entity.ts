@@ -31,7 +31,7 @@ export class Vehicule {
 
   //Fk
   @ManyToOne(() => VehiculeType, (vehiculeType) => vehiculeType.vehicules)
-  @JoinColumn({ name: 'vehicule_type' })
+  @JoinColumn({ name: 'vehiculeType' })
   vehiculeType: VehiculeType;
 
   @ManyToOne(() => Driver, (driver) => driver.idDriver)

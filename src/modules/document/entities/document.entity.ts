@@ -18,7 +18,7 @@ export class Document {
   documentNumber: string;
 
   @ManyToOne(() => DocumentType, (document) => document.idDocumentType)
-  @JoinColumn({ name: 'document_type' })
+  @JoinColumn({ name: 'documentType' })
   documentType: DocumentType;
 
   @CreateDateColumn({ type: 'timestamptz' })
