@@ -19,6 +19,7 @@ import { ServiceTypeService } from '../service-type/service-type.service';
 import { OrderSparePartMaterial } from './entities/order-spare-part-material.entity';
 import { OrderManpower } from './entities/order-manpower.entity';
 import { BillingService } from '../billing/billing.service';
+import { Vehicule } from '../vehicule/entities/vehicule.entity';
 
 @Injectable()
 export class OrderService {
@@ -54,27 +55,39 @@ export class OrderService {
         throw new BadRequestException('totals is required');
       }
 
-      // 1. Crear cliente
-      console.log('Antes de crear cliente');
+      // 1. Buscar o crear cliente
       let client;
       try {
+        client = await this.clientService.getClientByDocumentNumber(
+          createOrderDto.client.documentNumber,
+        );
+      } catch (e) {
+        // Si no existe, lo crea
         client = await this.clientService.createClient(
           createOrderDto.client,
           queryRunner.manager,
         );
-        console.log('Client created:', client);
-      } catch (error) {
-        console.error('Error creating client:', error);
-        throw new BadRequestException(
-          'Error creating client: ' + error.message,
-        );
       }
 
-      // 2. Crear vehículo
-      const vehicule = await this.vehiculeService.createVehicule(
-        createOrderDto.vehicule,
-        queryRunner.manager,
-      );
+      // 2. Buscar o crear vehículo (por placaCabezote o placaTrailer)
+      let vehicule;
+      const vehiculeRepo = queryRunner.manager.getRepository(Vehicule);
+      vehicule = await vehiculeRepo.findOne({
+        where: [
+          {
+            placaCabezote: createOrderDto.vehicule.placaCabezote,
+            active: true,
+          },
+          { placaTrailer: createOrderDto.vehicule.placaTrailer, active: true },
+        ],
+        relations: ['vehiculeType', 'driver'],
+      });
+      if (!vehicule) {
+        vehicule = await this.vehiculeService.createVehicule(
+          createOrderDto.vehicule,
+          queryRunner.manager,
+        );
+      }
 
       console.log('Vehicule created:', vehicule);
 
