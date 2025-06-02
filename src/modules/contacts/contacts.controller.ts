@@ -21,6 +21,11 @@ export class ContactsController {
     return this.contactsService.createContact(createContactDto);
   }
 
+  @Get()
+  getAllContacts() {
+    return this.contactsService.getAllContacts();
+  }
+
   @Get(':id')
   getContactsByClient(@Param('id', ParseUUIDPipe) id: string) {
     return this.contactsService.getContactsByClient(id);

@@ -35,6 +35,13 @@ export class ContactsService {
     return await this.contactRepository.save(newContact);
   }
 
+  async getAllContacts(): Promise<Contact[]> {
+    return await this.contactRepository.find({
+      relations: ['client'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async getContactsByClient(clientId: string): Promise<Contact[]> {
     const contacts = await this.contactRepository.find({
       where: {
