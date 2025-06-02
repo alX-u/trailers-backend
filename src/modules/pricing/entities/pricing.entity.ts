@@ -22,7 +22,7 @@ export class Pricing {
 
   //FKs
   @ManyToOne(() => User, (user) => user.idUser)
-  @JoinColumn({ name: 'user' })
+  @JoinColumn({ name: 'pricedBy' })
   pricedBy: User;
 
   @Column({ default: true })

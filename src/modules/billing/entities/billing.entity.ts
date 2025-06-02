@@ -25,6 +25,6 @@ export class Billing {
   active: boolean;
 
   @ManyToOne(() => User, (user) => user.idUser)
-  @JoinColumn({ name: 'billed_by' })
+  @JoinColumn({ name: 'billedBy' })
   billedBy: User;
 }
