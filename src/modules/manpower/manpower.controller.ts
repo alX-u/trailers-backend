@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ManpowerService } from './manpower.service';
 import { CreateManpowerDto } from './dto/create-manpower.dto';
@@ -21,8 +22,8 @@ export class ManpowerController {
   }
 
   @Get()
-  getAllManpower() {
-    return this.manpowerService.getAllManpower();
+  getAllManpower(@Query('filter') filter?: string) {
+    return this.manpowerService.getAllManpower(filter);
   }
 
   @Get(':id')

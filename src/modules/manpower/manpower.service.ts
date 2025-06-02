@@ -36,9 +36,14 @@ export class ManpowerService {
     return await this.manpowerRepository.save(manpower);
   }
 
-  async getAllManpower() {
+  async getAllManpower(filter?: string) {
+    let whereClause = {};
+    if (filter === 'Activo') {
+      whereClause = { active: true };
+    }
+
     return await this.manpowerRepository.find({
-      where: { active: true },
+      where: whereClause,
       relations: ['contractor', 'contractor.document'],
       order: { createdAt: 'DESC' },
     });
