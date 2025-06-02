@@ -49,6 +49,19 @@ export class DriverService {
     return driver;
   }
 
+  async getDriverByDocumentNumber(documentNumber: string) {
+    const driver = await this.driverRepository.findOne({
+      where: { document: { documentNumber }, active: true },
+      relations: ['document', 'document.documentType'],
+    });
+    if (!driver) {
+      throw new NotFoundException(
+        `Driver with document number ${documentNumber} not found`,
+      );
+    }
+    return driver;
+  }
+
   async updateDriver(id: string, updateDriverDto: UpdateDriverDto) {
     const driver = await this.driverRepository.findOne({
       where: { idDriver: id, active: true },

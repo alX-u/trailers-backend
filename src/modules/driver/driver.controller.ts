@@ -30,6 +30,11 @@ export class DriverController {
     return this.driverService.getDriverById(id);
   }
 
+  @Get('document/:documentNumber')
+  getDriverByDocumentNumber(@Param('documentNumber') documentNumber: string) {
+    return this.driverService.getDriverByDocumentNumber(documentNumber);
+  }
+
   @Patch(':id')
   updateDriver(
     @Param('id') id: string,
