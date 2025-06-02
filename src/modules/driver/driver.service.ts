@@ -34,14 +34,14 @@ export class DriverService {
   async getAllDrivers() {
     return await this.driverRepository.find({
       where: { active: true },
-      relations: ['document'],
+      relations: ['document', 'document.documentType'],
     });
   }
 
   async getDriverById(id: string) {
     const driver = await this.driverRepository.findOne({
       where: { idDriver: id, active: true },
-      relations: ['document'],
+      relations: ['document', 'document.documentType'],
     });
     if (!driver) {
       throw new NotFoundException(`Driver with id ${id} not found`);

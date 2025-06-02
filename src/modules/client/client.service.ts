@@ -74,7 +74,7 @@ export class ClientService {
         take,
         skip,
         order: { createdAt: 'DESC' },
-        relations: ['document'],
+        relations: ['document', 'document.documentType'],
       });
 
       return {
@@ -91,7 +91,7 @@ export class ClientService {
   async getClientById(id: string): Promise<Client> {
     const client = await this.clientRepository.findOne({
       where: { idClient: id },
-      relations: ['document'],
+      relations: ['document', 'document.documentType'],
     });
 
     if (!client) {
@@ -105,7 +105,7 @@ export class ClientService {
     return await this.clientRepository
       .findOne({
         where: { document: { documentNumber } },
-        relations: ['document'],
+        relations: ['document', 'document.documentType'],
       })
       .then((client) => {
         if (!client) {
