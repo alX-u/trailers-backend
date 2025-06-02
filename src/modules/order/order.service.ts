@@ -178,6 +178,7 @@ export class OrderService {
             );
           return queryRunner.manager.create(OrderManpower, {
             manpower: mpEntity,
+            cantidad: mpDto.cantidad,
             costoTotal: mpDto.costoTotal,
             factorVenta: mpDto.factorVenta,
             ventaUnitaria: mpDto.ventaUnitaria,
@@ -446,6 +447,7 @@ export class OrderService {
             return queryRunner.manager.create(OrderManpower, {
               order,
               manpower: mpEntity,
+              cantidad: mpDto.cantidad,
               costoTotal: mpDto.costoTotal,
               factorVenta: mpDto.factorVenta,
               ventaUnitaria: mpDto.ventaUnitaria,

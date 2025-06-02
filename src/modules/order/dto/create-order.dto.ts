@@ -59,6 +59,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   manpowers: {
     manpower: string;
+    cantidad: number;
     costoTotal: number;
     factorVenta: number;
     ventaUnitaria: number;

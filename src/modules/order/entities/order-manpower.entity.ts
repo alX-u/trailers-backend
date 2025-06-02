@@ -13,6 +13,9 @@ export class OrderManpower {
   @ManyToOne(() => Manpower, { eager: true })
   manpower: Manpower;
 
+  @Column({ nullable: true })
+  cantidad: number;
+
   @Column('float')
   costoTotal: number;
 
