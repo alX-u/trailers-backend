@@ -28,13 +28,13 @@ export class CreateOrderDto {
   @IsNotEmpty()
   serviceTypes: string[];
 
-  @IsObject()
+  @IsUUID()
   @IsNotEmpty()
-  client: CreateClientDto;
+  client: string;
 
-  @IsObject()
+  @IsUUID()
   @IsNotEmpty()
-  vehicule: CreateVehiculeDto;
+  vehicule: string;
 
   @IsArray()
   @IsNotEmpty()

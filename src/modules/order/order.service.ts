@@ -19,7 +19,6 @@ import { ServiceTypeService } from '../service-type/service-type.service';
 import { OrderSparePartMaterial } from './entities/order-spare-part-material.entity';
 import { OrderManpower } from './entities/order-manpower.entity';
 import { BillingService } from '../billing/billing.service';
-import { Vehicule } from '../vehicule/entities/vehicule.entity';
 
 @Injectable()
 export class OrderService {
@@ -55,37 +54,23 @@ export class OrderService {
         throw new BadRequestException('totals is required');
       }
 
-      // 1. Buscar o crear cliente
-      let client;
-      try {
-        client = await this.clientService.getClientByDocumentNumber(
-          createOrderDto.client.documentNumber,
-        );
-      } catch (e) {
-        // Si no existe, lo crea
-        client = await this.clientService.createClient(
-          createOrderDto.client,
-          queryRunner.manager,
+      // 1. Buscar cliente por ID
+      const client = await this.clientService.getClientById(
+        createOrderDto.client,
+      );
+      if (!client) {
+        throw new NotFoundException(
+          `Client with id ${createOrderDto.client} not found`,
         );
       }
 
-      // 2. Buscar o crear vehículo (por placaCabezote o placaTrailer)
-      let vehicule;
-      const vehiculeRepo = queryRunner.manager.getRepository(Vehicule);
-      vehicule = await vehiculeRepo.findOne({
-        where: [
-          {
-            placaCabezote: createOrderDto.vehicule.placaCabezote,
-            active: true,
-          },
-          { placaTrailer: createOrderDto.vehicule.placaTrailer, active: true },
-        ],
-        relations: ['vehiculeType', 'driver'],
-      });
+      // 2. Buscar vehículo por ID
+      const vehicule = await this.vehiculeService.getVehiculeById(
+        createOrderDto.vehicule,
+      );
       if (!vehicule) {
-        vehicule = await this.vehiculeService.createVehicule(
-          createOrderDto.vehicule,
-          queryRunner.manager,
+        throw new NotFoundException(
+          `Vehicule with id ${createOrderDto.vehicule} not found`,
         );
       }
 
@@ -360,22 +345,30 @@ export class OrderService {
         order.orderStatus = orderStatus;
       }
 
-      // 4. Actualizar cliente
+      // 4. Actualizar cliente (solo por ID)
       if (updateOrderDto.client) {
-        order.client = await this.clientService.updateClient(
-          order.client.idClient,
+        const client = await this.clientService.getClientById(
           updateOrderDto.client,
-          queryRunner.manager,
         );
+        if (!client) {
+          throw new NotFoundException(
+            `Client with id ${updateOrderDto.client} not found`,
+          );
+        }
+        order.client = client;
       }
 
-      // 5. Actualizar vehículo
+      // 5. Actualizar vehículo (solo por ID)
       if (updateOrderDto.vehicule) {
-        order.vehicule = await this.vehiculeService.updateVehicule(
-          order.vehicule.idVehicule,
+        const vehicule = await this.vehiculeService.getVehiculeById(
           updateOrderDto.vehicule,
-          queryRunner.manager,
         );
+        if (!vehicule) {
+          throw new NotFoundException(
+            `Vehicule with id ${updateOrderDto.vehicule} not found`,
+          );
+        }
+        order.vehicule = vehicule;
       }
 
       // 6. Actualizar pricings (reemplaza todos si se envía el array)
