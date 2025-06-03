@@ -12,13 +12,13 @@ export class Billing {
   @PrimaryGeneratedColumn('uuid')
   idBilling: string;
 
-  @Column()
+  @Column({ unique: true })
   billingNumber: string;
 
   @Column({ type: 'timestamptz' })
   billingDate: Date;
 
-  @Column()
+  @Column({ unique: true })
   actNumber: string;
 
   @Column({ default: false })

@@ -24,7 +24,7 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   idOrder: string;
 
-  @Column()
+  @Column({ unique: true })
   orderNumber: string;
 
   @Column({ type: 'timestamptz' })

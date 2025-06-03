@@ -14,7 +14,7 @@ export class Pricing {
   @PrimaryGeneratedColumn('uuid')
   idPricing: string;
 
-  @Column()
+  @Column({ unique: true })
   pricingNumber: string;
 
   @Column({ type: 'timestamptz' })
