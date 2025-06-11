@@ -27,7 +27,7 @@ export class Order {
   @Column()
   orderNumber: string;
 
-  @Column({ type: 'timestamptz' })
+  @Column({ type: 'timestamptz', nullable: true })
   outDate: Date;
 
   @Column({ default: true })

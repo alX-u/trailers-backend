@@ -64,6 +64,11 @@ export class SeedService {
       { name: 'Administrador' },
       { name: 'Usuario' },
       { name: 'Contratista' },
+      { name: 'Mecánico' },
+      { name: 'Personal de Empresa' },
+      { name: 'Jefe de Compra' },
+      { name: 'Director de Mantenimiento' },
+      { name: 'Conductor' },
     ];
     for (const role of roles) {
       const exists = await this.roleRepository.findOne({

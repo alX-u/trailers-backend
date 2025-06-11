@@ -3,13 +3,12 @@ import {
   IsDateString,
   IsNotEmpty,
   IsObject,
+  IsOptional,
   IsString,
   IsUUID,
 } from 'class-validator';
 import { CreateBillingDto } from 'src/modules/billing/dto/create-billing.dto';
-import { CreateClientDto } from 'src/modules/client/dto/create-client.dto';
 import { CreatePricingDto } from 'src/modules/pricing/dto/create-pricing.dto';
-import { CreateVehiculeDto } from 'src/modules/vehicule/dto/create-vehicule.dto';
 
 export class CreateOrderDto {
   @IsString()
@@ -17,8 +16,8 @@ export class CreateOrderDto {
   orderNumber: string;
 
   @IsDateString()
-  @IsNotEmpty()
-  outDate: Date;
+  @IsOptional()
+  outDate?: Date;
 
   @IsUUID()
   @IsNotEmpty()
