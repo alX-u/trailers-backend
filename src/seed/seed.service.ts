@@ -59,17 +59,33 @@ export class SeedService {
   }
 
   private async createRoles() {
+    // Roles a eliminar
+    const rolesToDelete = [
+      'Personal de Empresa',
+      'Jefe de Compra',
+      'Director de Mantenimiento',
+      'Conductor',
+    ];
+    for (const roleName of rolesToDelete) {
+      const existing = await this.roleRepository.findOne({
+        where: { name: roleName },
+      });
+      if (existing) {
+        await this.roleRepository.remove(existing);
+      }
+    }
+
     // Seed Role
     const roles = [
       { name: 'Administrador' },
       { name: 'Usuario' },
       { name: 'Contratista' },
       { name: 'Mecánico' },
-      { name: 'Personal de Empresa' },
-      { name: 'Jefe de Compra' },
-      { name: 'Director de Mantenimiento' },
-      { name: 'Conductor' },
       { name: 'Coordinador de Operaciones' },
+      { name: 'Colaborador' },
+      { name: 'Almacenista' },
+      { name: 'Auxiliar Administrativo' },
+      { name: 'Cliente Externo' },
     ];
     for (const role of roles) {
       const exists = await this.roleRepository.findOne({
