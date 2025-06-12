@@ -19,6 +19,7 @@ import { ServiceTypeService } from '../service-type/service-type.service';
 import { OrderSparePartMaterial } from './entities/order-spare-part-material.entity';
 import { OrderManpower } from './entities/order-manpower.entity';
 import { BillingService } from '../billing/billing.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class OrderService {
@@ -33,7 +34,8 @@ export class OrderService {
     private readonly sparePartMaterialService: SparePartMaterialService,
     private readonly manpowerService: ManpowerService,
     private readonly serviceTypeService: ServiceTypeService,
-    private readonly billingService: BillingService, // Asegúrate de que BillingService esté importado correctamente
+    private readonly billingService: BillingService,
+    private readonly userService: UserService,
   ) {}
   async createOrder(createOrderDto: CreateOrderDto) {
     const connection = this.orderRepository.manager.connection;
@@ -208,16 +210,34 @@ export class OrderService {
   async getAllOrdersPaginated({
     limit,
     offset,
+    userId,
   }: {
     limit?: number;
     offset?: number;
+    userId?: string;
   }) {
     const take = limit ?? 10;
     const skip = offset ?? 0;
 
-    try {
+    if (!userId) {
+      throw new BadRequestException('userId is required');
+    }
+
+    const user = await this.userService.getUserById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+
+    const whereClause: any = { active: true };
+
+    if (['Colaborador', 'Contratista', 'Mecánico'].includes(user.role.name)) {
       const [orders, total] = await this.orderRepository.findAndCount({
-        where: { active: true },
+        where: {
+          active: true,
+          manpowers: {
+            manpower: { contractor: { idUser: user.idUser } },
+          },
+        },
         relations: [
           'client',
           'client.document',
@@ -243,18 +263,39 @@ export class OrderService {
         skip,
         order: { createdAt: 'DESC' },
       });
-
-      return {
-        data: orders,
-        total,
-        limit: take,
-        offset: skip,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Unexpected error while fetching orders',
-      );
+      return { data: orders, total, limit: take, offset: skip };
     }
+
+    // Admin y Coordinador de Operaciones ven todas las órdenes
+    const [orders, total] = await this.orderRepository.findAndCount({
+      where: whereClause,
+      relations: [
+        'client',
+        'client.document',
+        'client.document.documentType',
+        'vehicule',
+        'vehicule.vehiculeType',
+        'vehicule.driver',
+        'vehicule.driver.document',
+        'vehicule.driver.document.documentType',
+        'orderStatus',
+        'pricings',
+        'pricings.pricedBy',
+        'sparePartMaterials',
+        'sparePartMaterials.sparePartMaterial.provider',
+        'manpowers',
+        'manpowers.manpower',
+        'manpowers.manpower.contractor',
+        'billings',
+        'billings.billedBy',
+        'serviceTypes',
+      ],
+      take,
+      skip,
+      order: { createdAt: 'DESC' },
+    });
+
+    return { data: orders, total, limit: take, offset: skip };
   }
 
   async findOrderById(id: string) {

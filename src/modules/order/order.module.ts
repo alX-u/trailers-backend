@@ -13,6 +13,7 @@ import { ServiceTypeModule } from '../service-type/service-type.module';
 import { OrderManpower } from './entities/order-manpower.entity';
 import { OrderSparePartMaterial } from './entities/order-spare-part-material.entity';
 import { BillingModule } from '../billing/billing.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
   controllers: [OrderController],
@@ -27,6 +28,7 @@ import { BillingModule } from '../billing/billing.module';
     OrderStatusModule,
     ServiceTypeModule,
     BillingModule,
+    UserModule,
   ],
   exports: [TypeOrmModule],
 })
