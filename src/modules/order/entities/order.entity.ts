@@ -63,13 +63,13 @@ export class Order {
     cascade: true,
     eager: true,
   })
-  sparePartMaterials: OrderSparePartMaterial[];
+  sparePartMaterials?: OrderSparePartMaterial[] | null;
 
   @OneToMany(() => OrderManpower, (om) => om.order, {
     cascade: true,
     eager: true,
   })
-  manpowers: OrderManpower[];
+  manpowers?: OrderManpower[] | null;
 
   @Column({ type: 'jsonb', nullable: true })
   total: {
