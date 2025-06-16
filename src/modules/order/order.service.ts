@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -37,6 +36,7 @@ export class OrderService {
     private readonly billingService: BillingService,
     private readonly userService: UserService,
   ) {}
+
   async createOrder(createOrderDto: CreateOrderDto) {
     const connection = this.orderRepository.manager.connection;
     const queryRunner = connection.createQueryRunner();
@@ -45,149 +45,175 @@ export class OrderService {
     await queryRunner.startTransaction();
 
     try {
-      // Validaciones adicionales
-      if (!createOrderDto.sparePartMaterials?.length) {
-        throw new BadRequestException('sparePartMaterials cannot be empty');
-      }
-      if (!createOrderDto.manpowers?.length) {
-        throw new BadRequestException('manpowers cannot be empty');
-      }
-      if (!createOrderDto.totals) {
-        throw new BadRequestException('totals is required');
+      // Buscar usuario asignado (assignTo)
+      let assignTo = null;
+      if (createOrderDto.assignTo) {
+        assignTo = await this.userService.getUserById(createOrderDto.assignTo);
+        if (!assignTo) {
+          throw new NotFoundException(
+            `User with id ${createOrderDto.assignTo} not found`,
+          );
+        }
+        const validRoles = ['Mecánico', 'Colaborador', 'Contratista'];
+        if (!validRoles.includes(assignTo.role.name)) {
+          throw new NotFoundException(
+            `User with id ${createOrderDto.assignTo} does not have a valid role (Mecánico, Colaborador, Contratista)`,
+          );
+        }
       }
 
-      // 1. Buscar cliente por ID
-      const client = await this.clientService.getClientById(
-        createOrderDto.client,
-      );
-      if (!client) {
-        throw new NotFoundException(
-          `Client with id ${createOrderDto.client} not found`,
+      // 1. Buscar cliente por ID (si viene)
+      let client = null;
+      if (createOrderDto.client) {
+        client = await this.clientService.getClientById(createOrderDto.client);
+        if (!client) {
+          throw new NotFoundException(
+            `Client with id ${createOrderDto.client} not found`,
+          );
+        }
+      }
+
+      // 2. Buscar vehículo por ID (si viene)
+      let vehicule = null;
+      if (createOrderDto.vehicule) {
+        vehicule = await this.vehiculeService.getVehiculeById(
+          createOrderDto.vehicule,
+        );
+        if (!vehicule) {
+          throw new NotFoundException(
+            `Vehicule with id ${createOrderDto.vehicule} not found`,
+          );
+        }
+      }
+
+      // 3. Buscar estado de la orden (si viene)
+      let orderStatus = null;
+      if (createOrderDto.orderStatus) {
+        orderStatus = await queryRunner.manager.findOne(OrderStatus, {
+          where: { idOrderStatus: createOrderDto.orderStatus },
+        });
+        if (!orderStatus)
+          throw new NotFoundException(
+            `OrderStatus with id ${createOrderDto.orderStatus} not found`,
+          );
+      }
+
+      // 4. Resolver relaciones many-to-many (serviceTypes)
+      let serviceTypes = [];
+      if (createOrderDto.serviceTypes) {
+        serviceTypes = await Promise.all(
+          createOrderDto.serviceTypes.map(async (id) => {
+            const st = await this.serviceTypeService.getServiceTypeById(id);
+            if (!st)
+              throw new NotFoundException(
+                `ServiceType with id ${id} not found`,
+              );
+            return st;
+          }),
         );
       }
-
-      // 2. Buscar vehículo por ID
-      const vehicule = await this.vehiculeService.getVehiculeById(
-        createOrderDto.vehicule,
-      );
-      if (!vehicule) {
-        throw new NotFoundException(
-          `Vehicule with id ${createOrderDto.vehicule} not found`,
-        );
-      }
-
-      console.log('Vehicule created:', vehicule);
-
-      // 3. Buscar estado de la orden
-      const orderStatus = await queryRunner.manager.findOne(OrderStatus, {
-        where: { idOrderStatus: createOrderDto.orderStatus },
-      });
-      if (!orderStatus)
-        throw new NotFoundException(
-          `OrderStatus with id ${createOrderDto.orderStatus} not found`,
-        );
-      console.log('OrderStatus found:', orderStatus);
-
-      // 4. Resolver relaciones many-to-many
-      const serviceTypes = await Promise.all(
-        (createOrderDto.serviceTypes || []).map(async (id) => {
-          const st = await this.serviceTypeService.getServiceTypeById(id);
-          if (!st)
-            throw new NotFoundException(`ServiceType with id ${id} not found`);
-          return st;
-        }),
-      );
-      console.log('ServiceTypes resolved:', serviceTypes);
 
       // 5. Crear los pricings dentro de la transacción
-      const pricings = await Promise.all(
-        (createOrderDto.pricings || []).map(async (pricingDto) => {
-          // Conversión de fecha si es string
-          const dto = {
-            ...pricingDto,
-            pricingDate: new Date(pricingDto.pricingDate),
-          };
-          return await this.pricingService.createPricing(
-            dto,
-            queryRunner.manager,
-          );
-        }),
-      );
-      console.log('Pricings created:', pricings);
+      let pricings = [];
+      if (createOrderDto.pricings) {
+        pricings = await Promise.all(
+          createOrderDto.pricings.map(async (pricingDto) => {
+            const dto = {
+              ...pricingDto,
+              pricingDate: new Date(pricingDto.pricingDate),
+            };
+            return await this.pricingService.createPricing(
+              dto,
+              queryRunner.manager,
+            );
+          }),
+        );
+      }
 
-      //5.5. Crear los pricings dentro de la transacción
-      const billings = await Promise.all(
-        (createOrderDto.billings || []).map(async (billingDto) => {
-          // Conversión de fecha si es string
-          const dto = {
-            ...billingDto,
-            billingDate: new Date(billingDto.billingDate),
-          };
-          return await this.billingService.createBilling(
-            dto,
-            queryRunner.manager,
-          );
-        }),
-      );
+      // 5.5. Crear los billings dentro de la transacción
+      let billings = [];
+      if (createOrderDto.billings) {
+        billings = await Promise.all(
+          createOrderDto.billings.map(async (billingDto) => {
+            const dto = {
+              ...billingDto,
+              billingDate: new Date(billingDto.billingDate),
+            };
+            return await this.billingService.createBilling(
+              dto,
+              queryRunner.manager,
+            );
+          }),
+        );
+      }
 
       // 6. Crear entidades pivot para sparePartMaterials
-      const sparePartMaterials = await Promise.all(
-        (createOrderDto.sparePartMaterials || []).map(async (spmDto) => {
-          const spmEntity =
-            await this.sparePartMaterialService.getSparepartMaterialById(
-              spmDto.sparePartMaterial,
-            );
-          if (!spmEntity)
-            throw new NotFoundException(
-              `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
-            );
-          return queryRunner.manager.create(OrderSparePartMaterial, {
-            sparePartMaterial: spmEntity,
-            cantidad: spmDto.cantidad,
-            costoTotal: spmDto.costoTotal,
-            factorVenta: spmDto.factorVenta,
-            ventaUnitaria: spmDto.ventaUnitaria,
-            ventaTotal: spmDto.ventaTotal,
-          });
-        }),
-      );
-      console.log('SparePartMaterials created:', sparePartMaterials);
+      let sparePartMaterials = [];
+      if (createOrderDto.sparePartMaterials) {
+        sparePartMaterials = await Promise.all(
+          createOrderDto.sparePartMaterials.map(async (spmDto) => {
+            const spmEntity =
+              await this.sparePartMaterialService.getSparepartMaterialById(
+                spmDto.sparePartMaterial,
+              );
+            if (!spmEntity)
+              throw new NotFoundException(
+                `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
+              );
+            return queryRunner.manager.create(OrderSparePartMaterial, {
+              sparePartMaterial: spmEntity,
+              cantidad: spmDto.cantidad,
+              costoTotal: spmDto.costoTotal,
+              factorVenta: spmDto.factorVenta,
+              ventaUnitaria: spmDto.ventaUnitaria,
+              ventaTotal: spmDto.ventaTotal,
+            });
+          }),
+        );
+      }
 
       // 7. Crear entidades pivot para manpowers
-      const manpowers = await Promise.all(
-        (createOrderDto.manpowers || []).map(async (mpDto) => {
-          const mpEntity = await this.manpowerService.getManpowerById(
-            mpDto.manpower,
-          );
-          if (!mpEntity)
-            throw new NotFoundException(
-              `Manpower with id ${mpDto.manpower} not found`,
+      let manpowers = [];
+      if (createOrderDto.manpowers) {
+        manpowers = await Promise.all(
+          createOrderDto.manpowers.map(async (mpDto) => {
+            const mpEntity = await this.manpowerService.getManpowerById(
+              mpDto.manpower,
             );
-          return queryRunner.manager.create(OrderManpower, {
-            manpower: mpEntity,
-            cantidad: mpDto.cantidad,
-            costoTotal: mpDto.costoTotal,
-            factorVenta: mpDto.factorVenta,
-            ventaUnitaria: mpDto.ventaUnitaria,
-            ventaTotal: mpDto.ventaTotal,
-          });
-        }),
-      );
-      console.log('Manpowers created:', manpowers);
+            if (!mpEntity)
+              throw new NotFoundException(
+                `Manpower with id ${mpDto.manpower} not found`,
+              );
+            return queryRunner.manager.create(OrderManpower, {
+              manpower: mpEntity,
+              cantidad: mpDto.cantidad,
+              costoTotal: mpDto.costoTotal,
+              factorVenta: mpDto.factorVenta,
+              ventaUnitaria: mpDto.ventaUnitaria,
+              ventaTotal: mpDto.ventaTotal,
+            });
+          }),
+        );
+      }
 
       // 8. Crear la orden
       const order = queryRunner.manager.create(Order, {
-        orderNumber: createOrderDto.orderNumber,
-        outDate: new Date(createOrderDto.outDate), // Conversión aquí
-        orderStatus,
-        serviceTypes,
-        client,
-        vehicule,
-        pricings,
-        billings,
-        sparePartMaterials,
-        manpowers,
-        total: createOrderDto.totals,
+        orderNumber: createOrderDto.orderNumber ?? null,
+        outDate: createOrderDto.outDate
+          ? new Date(createOrderDto.outDate)
+          : null,
+        orderStatus: orderStatus ?? null,
+        serviceTypes: serviceTypes.length ? serviceTypes : null,
+        client: client ?? null,
+        assignTo: assignTo ?? null,
+        vehicule: vehicule ?? null,
+        pricings: pricings.length ? pricings : null,
+        billings: billings.length ? billings : null,
+        sparePartMaterials: sparePartMaterials.length
+          ? sparePartMaterials
+          : null,
+        manpowers: manpowers.length ? manpowers : null,
+        total: createOrderDto.totals ?? null,
         active: true,
       });
 
@@ -197,7 +223,6 @@ export class OrderService {
       await queryRunner.commitTransaction();
       return savedOrder;
     } catch (error) {
-      // Puedes loggear el error aquí si lo deseas
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
         'Unexpected error while creating order',
@@ -210,7 +235,6 @@ export class OrderService {
   async getAllOrdersPaginated({
     limit,
     offset,
-    userId,
   }: {
     limit?: number;
     offset?: number;
@@ -219,65 +243,19 @@ export class OrderService {
     const take = limit ?? 10;
     const skip = offset ?? 0;
 
-    if (!userId) {
-      throw new BadRequestException('userId is required');
-    }
-
-    const user = await this.userService.getUserById(userId);
-    if (!user) {
-      throw new NotFoundException(`User with id ${userId} not found`);
-    }
-
-    const whereClause: any = { active: true };
-
-    if (['Colaborador', 'Contratista', 'Mecánico'].includes(user.role.name)) {
-      const [orders, total] = await this.orderRepository.findAndCount({
-        where: {
-          active: true,
-          manpowers: {
-            manpower: { contractor: { idUser: user.idUser } },
-          },
-        },
-        relations: [
-          'client',
-          'client.document',
-          'client.document.documentType',
-          'vehicule',
-          'vehicule.vehiculeType',
-          'vehicule.driver',
-          'vehicule.driver.document',
-          'vehicule.driver.document.documentType',
-          'orderStatus',
-          'pricings',
-          'pricings.pricedBy',
-          'sparePartMaterials',
-          'sparePartMaterials.sparePartMaterial.provider',
-          'manpowers',
-          'manpowers.manpower',
-          'manpowers.manpower.contractor',
-          'billings',
-          'billings.billedBy',
-          'serviceTypes',
-        ],
-        take,
-        skip,
-        order: { createdAt: 'DESC' },
-      });
-      return { data: orders, total, limit: take, offset: skip };
-    }
-
-    // Admin y Coordinador de Operaciones ven todas las órdenes
     const [orders, total] = await this.orderRepository.findAndCount({
-      where: whereClause,
+      where: { active: true },
       relations: [
+        'assignTo',
+        'assignTo.role',
         'client',
         'client.document',
         'client.document.documentType',
         'vehicule',
         'vehicule.vehiculeType',
-        'vehicule.driver',
-        'vehicule.driver.document',
-        'vehicule.driver.document.documentType',
+        'vehicule.drivers',
+        'vehicule.drivers.document',
+        'vehicule.drivers.document.documentType',
         'orderStatus',
         'pricings',
         'pricings.pricedBy',
@@ -285,7 +263,6 @@ export class OrderService {
         'sparePartMaterials.sparePartMaterial.provider',
         'manpowers',
         'manpowers.manpower',
-        'manpowers.manpower.contractor',
         'billings',
         'billings.billedBy',
         'serviceTypes',
@@ -303,14 +280,16 @@ export class OrderService {
       const order = await this.orderRepository.findOne({
         where: { idOrder: id, active: true },
         relations: [
+          'assignTo',
+          'assignTo.role',
           'client',
           'client.document',
           'client.document.documentType',
           'vehicule',
-          'vehicule.driver',
-          'vehicule.driver.document',
+          'vehicule.drivers',
+          'vehicule.drivers.document',
           'vehicule.vehiculeType',
-          'vehicule.driver.document.documentType',
+          'vehicule.drivers.document.documentType',
           'orderStatus',
           'pricings',
           'pricings.pricedBy',
@@ -318,7 +297,6 @@ export class OrderService {
           'sparePartMaterials.sparePartMaterial.provider',
           'manpowers',
           'manpowers.manpower',
-          'manpowers.manpower.contractor',
           'billings',
           'billings.billedBy',
           'serviceTypes',
@@ -366,149 +344,210 @@ export class OrderService {
         throw new NotFoundException(`Order with id ${id} not found`);
       }
 
-      // 2. Actualizar campos simples
-      if (updateOrderDto.orderNumber !== undefined)
-        order.orderNumber = updateOrderDto.orderNumber;
-      if (updateOrderDto.outDate !== undefined)
-        order.outDate = new Date(updateOrderDto.outDate);
-      if (updateOrderDto.active !== undefined)
-        order.active = updateOrderDto.active;
-      if (updateOrderDto.totals !== undefined)
-        order.total = updateOrderDto.totals;
+      // 2. Actualizar campos simples (pueden ser null)
+      if ('orderNumber' in updateOrderDto)
+        order.orderNumber = updateOrderDto.orderNumber ?? null;
+      if ('outDate' in updateOrderDto)
+        order.outDate = updateOrderDto.outDate
+          ? new Date(updateOrderDto.outDate)
+          : null;
+      if ('active' in updateOrderDto) order.active = updateOrderDto.active;
+      if ('totals' in updateOrderDto)
+        order.total = updateOrderDto.totals ?? null;
 
-      // 3. Actualizar estado de la orden
-      if (updateOrderDto.orderStatus) {
-        const orderStatus = await queryRunner.manager.findOne(OrderStatus, {
-          where: { idOrderStatus: updateOrderDto.orderStatus },
-        });
-        if (!orderStatus)
-          throw new NotFoundException(
-            `OrderStatus with id ${updateOrderDto.orderStatus} not found`,
-          );
-        order.orderStatus = orderStatus;
-      }
-
-      // 4. Actualizar cliente (solo por ID)
-      if (updateOrderDto.client) {
-        const client = await this.clientService.getClientById(
-          updateOrderDto.client,
-        );
-        if (!client) {
-          throw new NotFoundException(
-            `Client with id ${updateOrderDto.client} not found`,
-          );
+      // 3. Actualizar estado de la orden (puede ser null)
+      if ('orderStatus' in updateOrderDto) {
+        if (updateOrderDto.orderStatus) {
+          const orderStatus = await queryRunner.manager.findOne(OrderStatus, {
+            where: { idOrderStatus: updateOrderDto.orderStatus },
+          });
+          if (!orderStatus)
+            throw new NotFoundException(
+              `OrderStatus with id ${updateOrderDto.orderStatus} not found`,
+            );
+          order.orderStatus = orderStatus;
+        } else {
+          order.orderStatus = null;
         }
-        order.client = client;
       }
 
-      // 5. Actualizar vehículo (solo por ID)
-      if (updateOrderDto.vehicule) {
-        const vehicule = await this.vehiculeService.getVehiculeById(
-          updateOrderDto.vehicule,
-        );
-        if (!vehicule) {
-          throw new NotFoundException(
-            `Vehicule with id ${updateOrderDto.vehicule} not found`,
+      if ('assignTo' in updateOrderDto) {
+        if (updateOrderDto.assignTo) {
+          const assignTo = await this.userService.getUserById(
+            updateOrderDto.assignTo,
           );
+          if (!assignTo) {
+            throw new NotFoundException(
+              `User with id ${updateOrderDto.assignTo} not found`,
+            );
+          }
+          const validRoles = ['Mecánico', 'Colaborador', 'Contratista'];
+          if (!validRoles.includes(assignTo.role.name)) {
+            throw new NotFoundException(
+              `User with id ${updateOrderDto.assignTo} does not have a valid role (Mecánico, Colaborador, Contratista)`,
+            );
+          }
+          order.assignTo = assignTo;
+        } else {
+          order.assignTo = null;
         }
-        order.vehicule = vehicule;
       }
 
-      // 6. Actualizar pricings (reemplaza todos si se envía el array)
-      if (updateOrderDto.pricings) {
-        order.pricings = await Promise.all(
-          updateOrderDto.pricings.map((pricingDto) => {
-            const dto = {
-              ...pricingDto,
-              pricingDate: new Date(pricingDto.pricingDate),
-            };
-            return this.pricingService.createPricing(dto, queryRunner.manager);
-          }),
-        );
+      // 4. Actualizar cliente (puede ser null)
+      if ('client' in updateOrderDto) {
+        if (updateOrderDto.client) {
+          const client = await this.clientService.getClientById(
+            updateOrderDto.client,
+          );
+          if (!client) {
+            throw new NotFoundException(
+              `Client with id ${updateOrderDto.client} not found`,
+            );
+          }
+          order.client = client;
+        } else {
+          order.client = null;
+        }
       }
 
-      // 6.5. Actualizar billings (reemplaza todos si se envía el array)
-      if (updateOrderDto.billings) {
-        order.billings = await Promise.all(
-          updateOrderDto.billings.map((billingDto) => {
-            const dto = {
-              ...billingDto,
-              billingDate: new Date(billingDto.billingDate),
-            };
-            return this.billingService.createBilling(dto, queryRunner.manager);
-          }),
-        );
+      // 5. Actualizar vehículo (puede ser null)
+      if ('vehicule' in updateOrderDto) {
+        if (updateOrderDto.vehicule) {
+          const vehicule = await this.vehiculeService.getVehiculeById(
+            updateOrderDto.vehicule,
+          );
+          if (!vehicule) {
+            throw new NotFoundException(
+              `Vehicule with id ${updateOrderDto.vehicule} not found`,
+            );
+          }
+          order.vehicule = vehicule;
+        } else {
+          order.vehicule = null;
+        }
       }
 
-      // 7. Actualizar sparePartMaterials (entidades pivot)
-      if (updateOrderDto.sparePartMaterials) {
+      // 6. Actualizar pricings (puede ser null o array vacío)
+      if ('pricings' in updateOrderDto) {
+        if (updateOrderDto.pricings) {
+          order.pricings = await Promise.all(
+            updateOrderDto.pricings.map((pricingDto) => {
+              const dto = {
+                ...pricingDto,
+                pricingDate: new Date(pricingDto.pricingDate),
+              };
+              return this.pricingService.createPricing(
+                dto,
+                queryRunner.manager,
+              );
+            }),
+          );
+        } else {
+          order.pricings = null;
+        }
+      }
+
+      // 6.5. Actualizar billings (puede ser null o array vacío)
+      if ('billings' in updateOrderDto) {
+        if (updateOrderDto.billings) {
+          order.billings = await Promise.all(
+            updateOrderDto.billings.map((billingDto) => {
+              const dto = {
+                ...billingDto,
+                billingDate: new Date(billingDto.billingDate),
+              };
+              return this.billingService.createBilling(
+                dto,
+                queryRunner.manager,
+              );
+            }),
+          );
+        } else {
+          order.billings = null;
+        }
+      }
+
+      // 7. Actualizar sparePartMaterials (puede ser null o array vacío)
+      if ('sparePartMaterials' in updateOrderDto) {
         await queryRunner.manager.delete(OrderSparePartMaterial, {
           order: { idOrder: id },
         });
 
-        order.sparePartMaterials = await Promise.all(
-          updateOrderDto.sparePartMaterials.map(async (spmDto) => {
-            const spmEntity =
-              await this.sparePartMaterialService.getSparepartMaterialById(
-                spmDto.sparePartMaterial,
-              );
-            if (!spmEntity)
-              throw new NotFoundException(
-                `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
-              );
-            return queryRunner.manager.create(OrderSparePartMaterial, {
-              order,
-              sparePartMaterial: spmEntity,
-              cantidad: spmDto.cantidad,
-              costoTotal: spmDto.costoTotal,
-              factorVenta: spmDto.factorVenta,
-              ventaUnitaria: spmDto.ventaUnitaria,
-              ventaTotal: spmDto.ventaTotal,
-            });
-          }),
-        );
+        if (updateOrderDto.sparePartMaterials) {
+          order.sparePartMaterials = await Promise.all(
+            updateOrderDto.sparePartMaterials.map(async (spmDto) => {
+              const spmEntity =
+                await this.sparePartMaterialService.getSparepartMaterialById(
+                  spmDto.sparePartMaterial,
+                );
+              if (!spmEntity)
+                throw new NotFoundException(
+                  `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
+                );
+              return queryRunner.manager.create(OrderSparePartMaterial, {
+                order,
+                sparePartMaterial: spmEntity,
+                cantidad: spmDto.cantidad,
+                costoTotal: spmDto.costoTotal,
+                factorVenta: spmDto.factorVenta,
+                ventaUnitaria: spmDto.ventaUnitaria,
+                ventaTotal: spmDto.ventaTotal,
+              });
+            }),
+          );
+        } else {
+          order.sparePartMaterials = null;
+        }
       }
 
-      // 8. Actualizar manpowers (entidades pivot)
-      if (updateOrderDto.manpowers) {
+      // 8. Actualizar manpowers (puede ser null o array vacío)
+      if ('manpowers' in updateOrderDto) {
         await queryRunner.manager.delete(OrderManpower, {
           order: { idOrder: id },
         });
 
-        order.manpowers = await Promise.all(
-          updateOrderDto.manpowers.map(async (mpDto) => {
-            const mpEntity = await this.manpowerService.getManpowerById(
-              mpDto.manpower,
-            );
-            if (!mpEntity)
-              throw new NotFoundException(
-                `Manpower with id ${mpDto.manpower} not found`,
+        if (updateOrderDto.manpowers) {
+          order.manpowers = await Promise.all(
+            updateOrderDto.manpowers.map(async (mpDto) => {
+              const mpEntity = await this.manpowerService.getManpowerById(
+                mpDto.manpower,
               );
-            return queryRunner.manager.create(OrderManpower, {
-              order,
-              manpower: mpEntity,
-              cantidad: mpDto.cantidad,
-              costoTotal: mpDto.costoTotal,
-              factorVenta: mpDto.factorVenta,
-              ventaUnitaria: mpDto.ventaUnitaria,
-              ventaTotal: mpDto.ventaTotal,
-            });
-          }),
-        );
+              if (!mpEntity)
+                throw new NotFoundException(
+                  `Manpower with id ${mpDto.manpower} not found`,
+                );
+              return queryRunner.manager.create(OrderManpower, {
+                order,
+                manpower: mpEntity,
+                cantidad: mpDto.cantidad,
+                costoTotal: mpDto.costoTotal,
+                factorVenta: mpDto.factorVenta,
+                ventaUnitaria: mpDto.ventaUnitaria,
+                ventaTotal: mpDto.ventaTotal,
+              });
+            }),
+          );
+        } else {
+          order.manpowers = null;
+        }
       }
 
-      // 9. Actualizar serviceTypes (reemplaza todos si se envía el array)
-      if (updateOrderDto.serviceTypes) {
-        order.serviceTypes = await Promise.all(
-          updateOrderDto.serviceTypes.map(async (id) => {
-            const st = await this.serviceTypeService.getServiceTypeById(id);
-            if (!st)
-              throw new NotFoundException(
-                `ServiceType with id ${id} not found`,
-              );
-            return st;
-          }),
-        );
+      // 9. Actualizar serviceTypes (puede ser null o array vacío)
+      if ('serviceTypes' in updateOrderDto) {
+        if (updateOrderDto.serviceTypes) {
+          order.serviceTypes = await Promise.all(
+            updateOrderDto.serviceTypes.map(async (id) => {
+              const st = await this.serviceTypeService.getServiceTypeById(id);
+              if (!st)
+                throw new NotFoundException(
+                  `ServiceType with id ${id} not found`,
+                );
+              return st;
+            }),
+          );
+        } else {
+          order.serviceTypes = null;
+        }
       }
 
       // 10. Guardar la orden actualizada

@@ -20,7 +20,7 @@ export class VehiculeService {
     createVehiculeDto: CreateVehiculeDto,
     manager?: EntityManager,
   ) {
-    const { vehiculeType, driver, ...vehiculeDetails } = createVehiculeDto;
+    const { vehiculeType, drivers, ...vehiculeDetails } = createVehiculeDto;
 
     const vehiculeTypeRepo = manager
       ? manager.getRepository(VehiculeType)
@@ -39,18 +39,17 @@ export class VehiculeService {
       );
     }
 
-    // Resolve driver
-    // Nota: Si getDriverById también necesita soportar transacciones, pásale el manager.
-    const driverEntity = await this.driverService.getDriverById(driver);
-
-    if (!driverEntity) {
-      throw new NotFoundException(`Driver with id ${driver} not found`);
+    const driverEntities = await Promise.all(
+      drivers.map((driverId) => this.driverService.getDriverById(driverId)),
+    );
+    if (driverEntities.some((d) => !d)) {
+      throw new NotFoundException('One or more drivers not found');
     }
 
     const vehicule = vehiculeRepo.create({
       ...vehiculeDetails,
       vehiculeType: vehiculeTypeEntity,
-      driver: driverEntity,
+      drivers: driverEntities,
     });
 
     return await vehiculeRepo.save(vehicule);
@@ -122,17 +121,16 @@ export class VehiculeService {
       vehicule.vehiculeType = vehiculeTypeEntity;
     }
 
-    // Update driver if provided
-    if (updateVehiculeDto.driver) {
-      const driverEntity = await this.driverService.getDriverById(
-        updateVehiculeDto.driver,
+    if (updateVehiculeDto.drivers) {
+      const driverEntities = await Promise.all(
+        updateVehiculeDto.drivers.map((driverId) =>
+          this.driverService.getDriverById(driverId),
+        ),
       );
-      if (!driverEntity) {
-        throw new NotFoundException(
-          `Driver with id ${updateVehiculeDto.driver} not found`,
-        );
+      if (driverEntities.some((d) => !d)) {
+        throw new NotFoundException('One or more drivers not found');
       }
-      vehicule.driver = driverEntity;
+      vehicule.drivers = driverEntities;
     }
 
     // Update scalar fields

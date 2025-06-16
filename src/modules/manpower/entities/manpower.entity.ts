@@ -1,10 +1,7 @@
-import { User } from 'src/modules/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -22,11 +19,6 @@ export class Manpower {
 
   @Column()
   unitaryCost: number;
-
-  //FKs
-  @ManyToOne(() => User, (user) => user.idUser)
-  @JoinColumn({ name: 'contractor' })
-  contractor: User;
 
   @Column({ default: true })
   active: boolean;

@@ -19,13 +19,23 @@ export class DocumentService {
   ): Promise<Document> {
     const { documentType, documentNumber } = createDocumentDto;
 
+    // Check if a document with the same documentNumber already exists
+    const existingDocument = await this.documentRepository.findOneBy({
+      documentNumber,
+    });
+    if (existingDocument) {
+      throw new NotFoundException(
+        `Ya existe un usuario con el número de documento: ${documentNumber}`,
+      );
+    }
+
     // Find the DocumentType by UUID
     const docType = await this.documentTypeRepository.findOneBy({
       idDocumentType: documentType,
     });
     if (!docType) {
       throw new NotFoundException(
-        `DocumentType with id ${documentType} not found`,
+        `No se encontró un tipo de documento con el id ${documentType}`,
       );
     }
 

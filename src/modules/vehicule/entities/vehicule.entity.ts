@@ -6,6 +6,8 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -34,9 +36,13 @@ export class Vehicule {
   @JoinColumn({ name: 'vehiculeType' })
   vehiculeType: VehiculeType;
 
-  @ManyToOne(() => Driver, (driver) => driver.idDriver)
-  @JoinColumn({ name: 'driver' })
-  driver: Driver;
+  @ManyToMany(() => Driver, (driver) => driver.vehicules)
+  @JoinTable({
+    name: 'vehicule_driver',
+    joinColumn: { name: 'vehiculeId', referencedColumnName: 'idVehicule' },
+    inverseJoinColumn: { name: 'driverId', referencedColumnName: 'idDriver' },
+  })
+  drivers: Driver[];
 
   @OneToMany(() => Order, (order) => order.idOrder)
   orders: Order[];

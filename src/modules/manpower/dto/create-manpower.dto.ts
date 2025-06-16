@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateManpowerDto {
   @IsString()
@@ -12,8 +12,4 @@ export class CreateManpowerDto {
   @IsNumber()
   @IsNotEmpty()
   unitaryCost: number;
-
-  @IsUUID()
-  @IsNotEmpty()
-  contractor: string;
 }

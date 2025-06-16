@@ -25,9 +25,8 @@ export class OrderController {
   getAllOrdersPaginated(
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
-    @Query('userId') userId?: string,
   ) {
-    return this.orderService.getAllOrdersPaginated({ limit, offset, userId });
+    return this.orderService.getAllOrdersPaginated({ limit, offset });
   }
 
   @Get(':id')

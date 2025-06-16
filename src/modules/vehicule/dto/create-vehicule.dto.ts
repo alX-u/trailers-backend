@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 export class CreateVehiculeDto {
   @IsString()
@@ -18,7 +26,8 @@ export class CreateVehiculeDto {
   @IsNotEmpty()
   vehiculeType: string;
 
-  @IsUUID()
-  @IsNotEmpty()
-  driver: string;
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsUUID('all', { each: true })
+  drivers: string[];
 }

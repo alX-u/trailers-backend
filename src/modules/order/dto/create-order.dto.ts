@@ -1,7 +1,6 @@
 import {
   IsArray,
   IsDateString,
-  IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
@@ -12,40 +11,44 @@ import { CreatePricingDto } from 'src/modules/pricing/dto/create-pricing.dto';
 
 export class CreateOrderDto {
   @IsString()
-  @IsNotEmpty()
-  orderNumber: string;
+  @IsOptional()
+  orderNumber?: string;
 
   @IsDateString()
   @IsOptional()
   outDate?: Date;
 
   @IsUUID()
-  @IsNotEmpty()
-  orderStatus: string;
+  @IsOptional()
+  orderStatus?: string;
 
   @IsArray()
-  @IsNotEmpty()
-  serviceTypes: string[];
+  @IsOptional()
+  serviceTypes?: string[];
 
   @IsUUID()
-  @IsNotEmpty()
-  client: string;
+  @IsOptional()
+  assignTo?: string;
 
   @IsUUID()
-  @IsNotEmpty()
-  vehicule: string;
+  @IsOptional()
+  client?: string;
+
+  @IsUUID()
+  @IsOptional()
+  vehicule?: string;
 
   @IsArray()
-  @IsNotEmpty()
-  pricings: CreatePricingDto[];
+  @IsOptional()
+  pricings?: CreatePricingDto[];
 
   @IsArray()
-  @IsNotEmpty()
-  billings: CreateBillingDto[];
+  @IsOptional()
+  billings?: CreateBillingDto[];
 
   @IsArray()
-  @IsNotEmpty()
-  sparePartMaterials: {
+  @IsOptional()
+  sparePartMaterials?: {
     sparePartMaterial: string;
     cantidad: number;
     costoTotal: number;
@@ -55,8 +58,8 @@ export class CreateOrderDto {
   }[];
 
   @IsArray()
-  @IsNotEmpty()
-  manpowers: {
+  @IsOptional()
+  manpowers?: {
     manpower: string;
     cantidad: number;
     costoTotal: number;
@@ -66,8 +69,8 @@ export class CreateOrderDto {
   }[];
 
   @IsObject()
-  @IsNotEmpty()
-  totals: {
+  @IsOptional()
+  totals?: {
     subtotalCostosRepuestos: number;
     subtotalVentasRepuestos: number;
     subtotalCostosManoObra: number;

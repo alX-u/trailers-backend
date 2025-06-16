@@ -18,61 +18,72 @@ import {
 } from 'typeorm';
 import { OrderSparePartMaterial } from './order-spare-part-material.entity';
 import { OrderManpower } from './order-manpower.entity';
+import { User } from 'src/modules/user/entities/user.entity';
 
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   idOrder: string;
 
-  @Column()
-  orderNumber: string;
+  @Column({ nullable: true })
+  orderNumber?: string;
 
   @Column({ type: 'timestamptz', nullable: true })
-  outDate: Date;
+  outDate?: Date;
 
-  @Column({ default: true })
-  active: boolean;
+  @Column({ default: true, nullable: true })
+  active?: boolean;
 
   //FKs
-  @ManyToOne(() => OrderStatus, (orderStatus) => orderStatus.orders)
-  orderStatus: OrderStatus;
+  @ManyToOne(() => OrderStatus, (orderStatus) => orderStatus.orders, {
+    nullable: true,
+  })
+  orderStatus?: OrderStatus;
 
-  @ManyToOne(() => Client, (client) => client.orders)
+  @ManyToOne(() => User, (user) => user.idUser, { nullable: true })
+  @JoinColumn({ name: 'assignTo' })
+  assignTo?: User;
+
+  @ManyToOne(() => Client, (client) => client.orders, { nullable: true })
   @JoinColumn({ name: 'client' })
-  client: Client;
+  client?: Client;
 
-  @ManyToOne(() => Vehicule, (vehicule) => vehicule.orders)
+  @ManyToOne(() => Vehicule, (vehicule) => vehicule.orders, { nullable: true })
   @JoinColumn({ name: 'vehicule' })
-  vehicule: Vehicule;
+  vehicule?: Vehicule;
 
   //Many to many relationships
-  @ManyToMany(() => Billing, (billing) => billing.idBilling)
+  @ManyToMany(() => Billing, (billing) => billing.idBilling, { nullable: true })
   @JoinTable({ name: 'order_billing' })
-  billings: Billing[];
+  billings?: Billing[];
 
-  @ManyToMany(() => ServiceType, (serviceType) => serviceType.idServiceType)
+  @ManyToMany(() => ServiceType, (serviceType) => serviceType.idServiceType, {
+    nullable: true,
+  })
   @JoinTable({ name: 'order_serviceType' })
-  serviceTypes: ServiceType[];
+  serviceTypes?: ServiceType[];
 
-  @ManyToMany(() => Pricing, (pricing) => pricing.idPricing)
+  @ManyToMany(() => Pricing, (pricing) => pricing.idPricing, { nullable: true })
   @JoinTable({ name: 'order_pricing' })
-  pricings: Pricing[];
+  pricings?: Pricing[];
 
   // Pivot relations for extra fields
   @OneToMany(() => OrderSparePartMaterial, (ospm) => ospm.order, {
     cascade: true,
     eager: true,
+    nullable: true,
   })
   sparePartMaterials?: OrderSparePartMaterial[] | null;
 
   @OneToMany(() => OrderManpower, (om) => om.order, {
     cascade: true,
     eager: true,
+    nullable: true,
   })
   manpowers?: OrderManpower[] | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  total: {
+  total?: {
     subtotalCostosRepuestos: number;
     subtotalVentasRepuestos: number;
     subtotalCostosManoObra: number;
@@ -83,9 +94,9 @@ export class Order {
     totalVenta: number;
   };
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  createdAt: Date;
+  @CreateDateColumn({ type: 'timestamptz', nullable: true })
+  createdAt?: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt: Date;
+  @UpdateDateColumn({ type: 'timestamptz', nullable: true })
+  updatedAt?: Date;
 }

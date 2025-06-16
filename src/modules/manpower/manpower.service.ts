@@ -4,32 +4,22 @@ import { UpdateManpowerDto } from './dto/update-manpower.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Manpower } from './entities/manpower.entity';
 import { Repository } from 'typeorm';
-import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ManpowerService {
   constructor(
     @InjectRepository(Manpower)
     private readonly manpowerRepository: Repository<Manpower>,
-    private readonly userService: UserService,
   ) {}
-  async createManpower(createManpowerDto: CreateManpowerDto) {
-    const { name, type, unitaryCost, contractor } = createManpowerDto;
 
-    // Validate contractor (user) exists
-    const contractorUser = await this.userService.getUserById(contractor);
-    if (!contractorUser) {
-      throw new NotFoundException(
-        `Contractor (user) with id ${contractor} not found`,
-      );
-    }
+  async createManpower(createManpowerDto: CreateManpowerDto) {
+    const { name, type, unitaryCost } = createManpowerDto;
 
     // Create and save the manpower entity
     const manpower = this.manpowerRepository.create({
       name,
       type,
       unitaryCost,
-      contractor: contractorUser,
       active: true,
     });
 
@@ -44,7 +34,6 @@ export class ManpowerService {
 
     return await this.manpowerRepository.find({
       where: whereClause,
-      relations: ['contractor', 'contractor.document'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -52,7 +41,6 @@ export class ManpowerService {
   async getManpowerById(id: string) {
     const manpower = await this.manpowerRepository.findOne({
       where: { idManpower: id, active: true },
-      relations: ['contractor', 'contractor.document'],
     });
     if (!manpower) {
       throw new NotFoundException(`Manpower with id ${id} not found`);
@@ -63,23 +51,9 @@ export class ManpowerService {
   async updateManpower(id: string, updateManpowerDto: UpdateManpowerDto) {
     const manpower = await this.manpowerRepository.findOne({
       where: { idManpower: id, active: true },
-      relations: ['contractor'],
     });
     if (!manpower) {
       throw new NotFoundException(`Manpower with id ${id} not found`);
-    }
-
-    // If contractor is being updated, validate the new contractor exists
-    if (updateManpowerDto.contractor) {
-      const contractorUser = await this.userService.getUserById(
-        updateManpowerDto.contractor,
-      );
-      if (!contractorUser) {
-        throw new NotFoundException(
-          `Contractor (user) with id ${updateManpowerDto.contractor} not found`,
-        );
-      }
-      manpower.contractor = contractorUser;
     }
 
     if (updateManpowerDto.name !== undefined)
