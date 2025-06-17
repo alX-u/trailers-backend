@@ -64,7 +64,7 @@ export class VehiculeService {
   }) {
     const [vehicules, total] = await this.vehiculeRepository.findAndCount({
       where: { active: true },
-      relations: ['vehiculeType', 'driver'],
+      relations: ['vehiculeType', 'drivers'],
       take: limit,
       skip: offset,
       order: { createdAt: 'DESC' },
@@ -80,7 +80,7 @@ export class VehiculeService {
   async getVehiculeById(id: string) {
     const vehicule = await this.vehiculeRepository.findOne({
       where: { idVehicule: id, active: true },
-      relations: ['vehiculeType', 'driver'],
+      relations: ['vehiculeType', 'drivers'],
     });
     if (!vehicule) {
       throw new NotFoundException(`Vehicule with id ${id} not found`);
@@ -102,7 +102,7 @@ export class VehiculeService {
 
     const vehicule = await repo.findOne({
       where: { idVehicule: id, active: true },
-      relations: ['vehiculeType', 'driver'],
+      relations: ['vehiculeType', 'drivers'],
     });
     if (!vehicule) {
       throw new NotFoundException(`Vehicule with id ${id} not found`);
