@@ -15,6 +15,7 @@ import { OrderSparePartMaterial } from './entities/order-spare-part-material.ent
 import { BillingModule } from '../billing/billing.module';
 import { UserModule } from '../user/user.module';
 import { DriverModule } from '../driver/driver.module';
+import { ProviderModule } from '../provider/provider.module';
 
 @Module({
   controllers: [OrderController],
@@ -31,6 +32,7 @@ import { DriverModule } from '../driver/driver.module';
     BillingModule,
     UserModule,
     DriverModule,
+    ProviderModule,
   ],
   exports: [TypeOrmModule],
 })

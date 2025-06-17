@@ -20,6 +20,7 @@ import { OrderManpower } from './entities/order-manpower.entity';
 import { BillingService } from '../billing/billing.service';
 import { UserService } from '../user/user.service';
 import { DriverService } from '../driver/driver.service';
+import { ProviderService } from '../provider/provider.service';
 
 @Injectable()
 export class OrderService {
@@ -37,6 +38,7 @@ export class OrderService {
     private readonly billingService: BillingService,
     private readonly userService: UserService,
     private readonly driverService: DriverService,
+    private readonly providerService: ProviderService,
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto) {
@@ -175,8 +177,22 @@ export class OrderService {
               throw new NotFoundException(
                 `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
               );
+
+            // Buscar el proveedor seleccionado
+            let selectedProvider = null;
+            if (spmDto.selectedProvider) {
+              selectedProvider = await this.providerService.getProviderById(
+                spmDto.selectedProvider,
+              );
+              if (!selectedProvider)
+                throw new NotFoundException(
+                  `Provider with id ${spmDto.selectedProvider} not found`,
+                );
+            }
+
             return queryRunner.manager.create(OrderSparePartMaterial, {
               sparePartMaterial: spmEntity,
+              selectedProvider,
               cantidad: spmDto.cantidad,
               costoTotal: spmDto.costoTotal,
               factorVenta: spmDto.factorVenta,
@@ -538,9 +554,23 @@ export class OrderService {
                 throw new NotFoundException(
                   `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
                 );
+
+              // Buscar el proveedor seleccionado
+              let selectedProvider = null;
+              if (spmDto.selectedProvider) {
+                selectedProvider = await this.providerService.getProviderById(
+                  spmDto.selectedProvider,
+                );
+                if (!selectedProvider)
+                  throw new NotFoundException(
+                    `Provider with id ${spmDto.selectedProvider} not found`,
+                  );
+              }
+
               return queryRunner.manager.create(OrderSparePartMaterial, {
                 order,
                 sparePartMaterial: spmEntity,
+                selectedProvider,
                 cantidad: spmDto.cantidad,
                 costoTotal: spmDto.costoTotal,
                 factorVenta: spmDto.factorVenta,

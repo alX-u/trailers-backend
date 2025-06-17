@@ -1,6 +1,7 @@
 import { Entity, ManyToOne, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { Order } from './order.entity';
 import { SparePartMaterial } from 'src/modules/spare-part-material/entities/spare-part-material.entity';
+import { Provider } from 'src/modules/provider/entities/provider.entity';
 
 @Entity()
 export class OrderSparePartMaterial {
@@ -11,6 +12,9 @@ export class OrderSparePartMaterial {
     onDelete: 'CASCADE',
   })
   order: Order;
+
+  @ManyToOne(() => Provider, (provider) => provider.idProvider, { eager: true })
+  selectedProvider: Provider;
 
   @ManyToOne(() => SparePartMaterial, { eager: true })
   sparePartMaterial: SparePartMaterial;

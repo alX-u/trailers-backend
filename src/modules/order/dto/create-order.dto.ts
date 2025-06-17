@@ -54,6 +54,7 @@ export class CreateOrderDto {
   @IsOptional()
   sparePartMaterials?: {
     sparePartMaterial: string;
+    selectedProvider: string;
     cantidad: number;
     costoTotal: number;
     factorVenta: number;

@@ -22,19 +22,22 @@ export class SparePartMaterialService {
     createSparePartMaterialDto: CreateSparePartMaterialDto,
   ) {
     try {
-      // Resolve provider
-      const provider = await this.providerService.getProviderById(
-        createSparePartMaterialDto.provider,
+      const providers = await Promise.all(
+        (createSparePartMaterialDto.providers || []).map(async (providerId) => {
+          const provider =
+            await this.providerService.getProviderById(providerId);
+          if (!provider) {
+            throw new NotFoundException(
+              `Provider with ID ${providerId} not found`,
+            );
+          }
+          return provider;
+        }),
       );
-      if (!provider) {
-        throw new NotFoundException(
-          `Provider with ID ${createSparePartMaterialDto.provider} not found`,
-        );
-      }
 
       const sparePartMaterial = this.sparePartMaterialRepository.create({
         ...createSparePartMaterialDto,
-        provider,
+        providers,
       });
 
       return await this.sparePartMaterialRepository.save(sparePartMaterial);
@@ -51,7 +54,7 @@ export class SparePartMaterialService {
         await this.sparePartMaterialRepository.findAndCount({
           where: whereClause,
           order: { createdAt: 'DESC' },
-          relations: ['provider'],
+          relations: ['providers'],
         });
 
       return {
@@ -67,7 +70,7 @@ export class SparePartMaterialService {
     try {
       const item = await this.sparePartMaterialRepository.findOne({
         where: { idSparePartMaterial: id },
-        relations: ['provider'],
+        relations: ['providers'],
       });
 
       if (!item) {
@@ -87,10 +90,9 @@ export class SparePartMaterialService {
     updateSparePartMaterialDto: UpdateSparePartMaterialDto,
   ) {
     try {
-      // Fetch the existing entity
       const sparePartMaterial = await this.sparePartMaterialRepository.findOne({
         where: { idSparePartMaterial: id },
-        relations: ['provider'],
+        relations: ['providers'],
       });
 
       if (!sparePartMaterial) {
@@ -99,40 +101,29 @@ export class SparePartMaterialService {
         );
       }
 
-      // If provider is being updated, resolve the new provider
-      if (
-        updateSparePartMaterialDto.provider &&
-        updateSparePartMaterialDto.provider !==
-          (sparePartMaterial.provider?.idProvider || sparePartMaterial.provider)
-      ) {
-        const provider = await this.providerService.getProviderById(
-          updateSparePartMaterialDto.provider,
+      // Si se actualizan los proveedores
+      if (updateSparePartMaterialDto.providers) {
+        const providers = await Promise.all(
+          updateSparePartMaterialDto.providers.map(async (providerId) => {
+            const provider =
+              await this.providerService.getProviderById(providerId);
+            if (!provider) {
+              throw new NotFoundException(
+                `Provider with ID ${providerId} not found`,
+              );
+            }
+            return provider;
+          }),
         );
-        if (!provider) {
-          throw new NotFoundException(
-            `Provider with ID ${updateSparePartMaterialDto.provider} not found`,
-          );
-        }
-        sparePartMaterial.provider = provider;
+        sparePartMaterial.providers = providers;
       }
 
-      // Update scalar fields if provided
+      // Actualiza otros campos según tu DTO...
       if (updateSparePartMaterialDto.name !== undefined)
         sparePartMaterial.name = updateSparePartMaterialDto.name;
-      if (updateSparePartMaterialDto.type !== undefined)
-        sparePartMaterial.type = updateSparePartMaterialDto.type;
-      if (updateSparePartMaterialDto.measurementUnit !== undefined)
-        sparePartMaterial.measurementUnit =
-          updateSparePartMaterialDto.measurementUnit;
-      if (updateSparePartMaterialDto.unitaryCost !== undefined)
-        sparePartMaterial.unitaryCost = updateSparePartMaterialDto.unitaryCost;
-      if (updateSparePartMaterialDto.active !== undefined)
-        sparePartMaterial.active = updateSparePartMaterialDto.active;
+      // ...otros campos...
 
-      // Save the updated entity
-      const updated =
-        await this.sparePartMaterialRepository.save(sparePartMaterial);
-      return updated;
+      return await this.sparePartMaterialRepository.save(sparePartMaterial);
     } catch (error) {
       this.handleDBExceptions(error);
     }

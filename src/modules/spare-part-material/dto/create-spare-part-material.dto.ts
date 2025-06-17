@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 export class CreateSparePartMaterialDto {
   @IsNotEmpty()
@@ -18,7 +26,8 @@ export class CreateSparePartMaterialDto {
   @Min(0)
   unitaryCost: number;
 
-  @IsUUID()
-  @IsNotEmpty()
-  provider: string;
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsUUID('all', { each: true })
+  providers: string[];
 }

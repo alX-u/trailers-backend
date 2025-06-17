@@ -3,8 +3,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -29,10 +29,20 @@ export class SparePartMaterial {
   @Column({ default: true })
   active: boolean;
 
-  //FKs
-  @ManyToOne(() => Provider, (provider) => provider.idProvider)
-  @JoinColumn({ name: 'provider' })
-  provider: Provider;
+  // Cambia a ManyToMany
+  @ManyToMany(() => Provider)
+  @JoinTable({
+    name: 'spare_part_material_providers',
+    joinColumn: {
+      name: 'sparePartMaterialId',
+      referencedColumnName: 'idSparePartMaterial',
+    },
+    inverseJoinColumn: {
+      name: 'providerId',
+      referencedColumnName: 'idProvider',
+    },
+  })
+  providers: Provider[];
 
   //Date columns
   @CreateDateColumn({ type: 'timestamptz' })
