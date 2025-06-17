@@ -235,6 +235,7 @@ export class OrderService {
   async getAllOrdersPaginated({
     limit,
     offset,
+    userId,
   }: {
     limit?: number;
     offset?: number;
@@ -243,8 +244,24 @@ export class OrderService {
     const take = limit ?? 10;
     const skip = offset ?? 0;
 
+    let whereClause: any = { active: true };
+
+    // Si viene userId, filtra por rol
+    if (userId) {
+      const user = await this.userService.getUserById(userId);
+      if (
+        user &&
+        ['Colaborador', 'Mecánico', 'Contratista'].includes(user.role.name)
+      ) {
+        whereClause = {
+          ...whereClause,
+          assignTo: { idUser: userId },
+        };
+      }
+    }
+
     const [orders, total] = await this.orderRepository.findAndCount({
-      where: { active: true },
+      where: whereClause,
       relations: [
         'assignTo',
         'assignTo.role',
