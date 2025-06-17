@@ -38,6 +38,10 @@ export class CreateOrderDto {
   @IsOptional()
   vehicule?: string;
 
+  @IsUUID()
+  @IsOptional()
+  assignedDriver?: string;
+
   @IsArray()
   @IsOptional()
   pricings?: CreatePricingDto[];

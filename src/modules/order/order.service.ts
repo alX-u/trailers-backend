@@ -19,6 +19,7 @@ import { OrderSparePartMaterial } from './entities/order-spare-part-material.ent
 import { OrderManpower } from './entities/order-manpower.entity';
 import { BillingService } from '../billing/billing.service';
 import { UserService } from '../user/user.service';
+import { DriverService } from '../driver/driver.service';
 
 @Injectable()
 export class OrderService {
@@ -35,6 +36,7 @@ export class OrderService {
     private readonly serviceTypeService: ServiceTypeService,
     private readonly billingService: BillingService,
     private readonly userService: UserService,
+    private readonly driverService: DriverService,
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto) {
@@ -81,7 +83,20 @@ export class OrderService {
         );
         if (!vehicule) {
           throw new NotFoundException(
-            `Vehicule with id ${createOrderDto.vehicule} not found`,
+            `Vehículo con id ${createOrderDto.vehicule} no encontrado`,
+          );
+        }
+      }
+
+      // Buscar conductor asignado (assignedDriver)
+      let assignedDriver = null;
+      if (createOrderDto.assignedDriver) {
+        assignedDriver = await this.driverService.getDriverById(
+          createOrderDto.assignedDriver,
+        );
+        if (!assignedDriver) {
+          throw new NotFoundException(
+            `Conductor con id ${createOrderDto.assignedDriver} no encontrado`,
           );
         }
       }
@@ -273,6 +288,9 @@ export class OrderService {
         'vehicule.drivers',
         'vehicule.drivers.document',
         'vehicule.drivers.document.documentType',
+        'assignedDriver',
+        'assignedDriver.document',
+        'assignedDriver.document.documentType',
         'orderStatus',
         'pricings',
         'pricings.pricedBy',
@@ -307,6 +325,9 @@ export class OrderService {
           'vehicule.drivers.document',
           'vehicule.vehiculeType',
           'vehicule.drivers.document.documentType',
+          'assignedDriver',
+          'assignedDriver.document',
+          'assignedDriver.document.documentType',
           'orderStatus',
           'pricings',
           'pricings.pricedBy',
@@ -441,6 +462,22 @@ export class OrderService {
           order.vehicule = vehicule;
         } else {
           order.vehicule = null;
+        }
+      }
+
+      if ('assignedDriver' in updateOrderDto) {
+        if (updateOrderDto.assignedDriver) {
+          const assignedDriver = await this.driverService.getDriverById(
+            updateOrderDto.assignedDriver,
+          );
+          if (!assignedDriver) {
+            throw new NotFoundException(
+              `Conductor con id ${updateOrderDto.assignedDriver} no encontrado`,
+            );
+          }
+          order.assignedDriver = assignedDriver;
+        } else {
+          order.assignedDriver = null;
         }
       }
 

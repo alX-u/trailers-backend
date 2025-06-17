@@ -19,6 +19,7 @@ import {
 import { OrderSparePartMaterial } from './order-spare-part-material.entity';
 import { OrderManpower } from './order-manpower.entity';
 import { User } from 'src/modules/user/entities/user.entity';
+import { Driver } from 'src/modules/driver/entities/driver.entity';
 
 @Entity()
 export class Order {
@@ -51,6 +52,10 @@ export class Order {
   @ManyToOne(() => Vehicule, (vehicule) => vehicule.orders, { nullable: true })
   @JoinColumn({ name: 'vehicule' })
   vehicule?: Vehicule;
+
+  @ManyToOne(() => Driver, (driver) => driver.idDriver, { nullable: true })
+  @JoinColumn({ name: 'assignedDriver' })
+  assignedDriver?: Driver;
 
   //Many to many relationships
   @ManyToMany(() => Billing, (billing) => billing.idBilling, { nullable: true })

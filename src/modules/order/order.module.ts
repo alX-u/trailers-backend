@@ -14,6 +14,7 @@ import { OrderManpower } from './entities/order-manpower.entity';
 import { OrderSparePartMaterial } from './entities/order-spare-part-material.entity';
 import { BillingModule } from '../billing/billing.module';
 import { UserModule } from '../user/user.module';
+import { DriverModule } from '../driver/driver.module';
 
 @Module({
   controllers: [OrderController],
@@ -29,6 +30,7 @@ import { UserModule } from '../user/user.module';
     ServiceTypeModule,
     BillingModule,
     UserModule,
+    DriverModule,
   ],
   exports: [TypeOrmModule],
 })
