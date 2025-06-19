@@ -13,13 +13,13 @@ export class ManpowerService {
   ) {}
 
   async createManpower(createManpowerDto: CreateManpowerDto) {
-    const { name, type, unitaryCost } = createManpowerDto;
+    const { name, type } = createManpowerDto;
 
     // Create and save the manpower entity
     const manpower = this.manpowerRepository.create({
       name,
       type,
-      unitaryCost,
+
       active: true,
     });
 
@@ -60,8 +60,7 @@ export class ManpowerService {
       manpower.name = updateManpowerDto.name;
     if (updateManpowerDto.type !== undefined)
       manpower.type = updateManpowerDto.type;
-    if (updateManpowerDto.unitaryCost !== undefined)
-      manpower.unitaryCost = updateManpowerDto.unitaryCost;
+
     if (updateManpowerDto.active !== undefined)
       manpower.active = updateManpowerDto.active;
 

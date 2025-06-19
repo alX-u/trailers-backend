@@ -10,29 +10,25 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class SparePartMaterial {
+export class Supply {
   @PrimaryGeneratedColumn('uuid')
-  idSparePartMaterial: string;
+  idSupply: string;
 
   @Column()
   name: string;
 
-  @Column()
-  type: string;
-
-  @Column()
+  @Column({ nullable: true })
   measurementUnit: string;
 
   @Column({ default: true })
   active: boolean;
 
-  // Cambia a ManyToMany
   @ManyToMany(() => Provider)
   @JoinTable({
-    name: 'spare_part_material_providers',
+    name: 'supply_providers',
     joinColumn: {
-      name: 'sparePartMaterialId',
-      referencedColumnName: 'idSparePartMaterial',
+      name: 'supplyId',
+      referencedColumnName: 'idSupply',
     },
     inverseJoinColumn: {
       name: 'providerId',

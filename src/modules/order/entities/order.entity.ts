@@ -26,8 +26,8 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   idOrder: string;
 
-  @Column({ nullable: true, unique: true })
-  orderNumber?: string;
+  @Column({ type: 'int', unique: true, generated: 'increment' })
+  orderNumber: number;
 
   @Column({ type: 'timestamptz', nullable: true })
   outDate?: Date;
@@ -41,9 +41,9 @@ export class Order {
   })
   orderStatus?: OrderStatus;
 
-  @ManyToOne(() => User, (user) => user.idUser, { nullable: true })
-  @JoinColumn({ name: 'assignTo' })
-  assignTo?: User;
+  @ManyToMany(() => User, (user) => user.idUser, { nullable: true })
+  @JoinTable({ name: 'order_assignTo' })
+  assignTo?: User[];
 
   @ManyToOne(() => Client, (client) => client.orders, { nullable: true })
   @JoinColumn({ name: 'client' })

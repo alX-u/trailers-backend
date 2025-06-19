@@ -2,10 +2,8 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsNotEmpty,
-  IsNumber,
   IsString,
   IsUUID,
-  Min,
 } from 'class-validator';
 
 export class CreateSparePartMaterialDto {
@@ -20,11 +18,6 @@ export class CreateSparePartMaterialDto {
   @IsString()
   @IsNotEmpty()
   measurementUnit: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  @Min(0)
-  unitaryCost: number;
 
   @IsArray()
   @ArrayNotEmpty()

@@ -17,9 +17,6 @@ export class Manpower {
   @Column()
   type: string;
 
-  @Column()
-  unitaryCost: number;
-
   @Column({ default: true })
   active: boolean;
 

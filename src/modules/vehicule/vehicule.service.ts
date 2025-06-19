@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Vehicule } from './entities/vehicule.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { VehiculeType } from '../vehicule-type/entities/vehicule-type.entity';
-import { DriverService } from '../driver/driver.service';
 
 @Injectable()
 export class VehiculeService {
@@ -14,13 +13,12 @@ export class VehiculeService {
     private readonly vehiculeRepository: Repository<Vehicule>,
     @InjectRepository(VehiculeType)
     private readonly vehiculeTypeRepository: Repository<VehiculeType>,
-    private readonly driverService: DriverService,
   ) {}
   async createVehicule(
     createVehiculeDto: CreateVehiculeDto,
     manager?: EntityManager,
   ) {
-    const { vehiculeType, drivers, ...vehiculeDetails } = createVehiculeDto;
+    const { vehiculeType, ...vehiculeDetails } = createVehiculeDto;
 
     const vehiculeTypeRepo = manager
       ? manager.getRepository(VehiculeType)
@@ -39,17 +37,9 @@ export class VehiculeService {
       );
     }
 
-    const driverEntities = await Promise.all(
-      drivers.map((driverId) => this.driverService.getDriverById(driverId)),
-    );
-    if (driverEntities.some((d) => !d)) {
-      throw new NotFoundException('One or more drivers not found');
-    }
-
     const vehicule = vehiculeRepo.create({
       ...vehiculeDetails,
       vehiculeType: vehiculeTypeEntity,
-      drivers: driverEntities,
     });
 
     return await vehiculeRepo.save(vehicule);
@@ -64,7 +54,7 @@ export class VehiculeService {
   }) {
     const [vehicules, total] = await this.vehiculeRepository.findAndCount({
       where: { active: true },
-      relations: ['vehiculeType', 'drivers'],
+      relations: ['vehiculeType'],
       take: limit,
       skip: offset,
       order: { createdAt: 'DESC' },
@@ -80,7 +70,7 @@ export class VehiculeService {
   async getVehiculeById(id: string) {
     const vehicule = await this.vehiculeRepository.findOne({
       where: { idVehicule: id, active: true },
-      relations: ['vehiculeType', 'drivers'],
+      relations: ['vehiculeType'],
     });
     if (!vehicule) {
       throw new NotFoundException(`Vehicule with id ${id} not found`);
@@ -119,18 +109,6 @@ export class VehiculeService {
         );
       }
       vehicule.vehiculeType = vehiculeTypeEntity;
-    }
-
-    if (updateVehiculeDto.drivers) {
-      const driverEntities = await Promise.all(
-        updateVehiculeDto.drivers.map((driverId) =>
-          this.driverService.getDriverById(driverId),
-        ),
-      );
-      if (driverEntities.some((d) => !d)) {
-        throw new NotFoundException('One or more drivers not found');
-      }
-      vehicule.drivers = driverEntities;
     }
 
     // Update scalar fields

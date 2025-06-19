@@ -16,12 +16,19 @@ import { BillingModule } from '../billing/billing.module';
 import { UserModule } from '../user/user.module';
 import { DriverModule } from '../driver/driver.module';
 import { ProviderModule } from '../provider/provider.module';
+import { SupplyModule } from '../supply/supply.module';
+import { OrderManpowerSupply } from './entities/order-manpower-supply.entity';
 
 @Module({
   controllers: [OrderController],
   providers: [OrderService],
   imports: [
-    TypeOrmModule.forFeature([Order, OrderManpower, OrderSparePartMaterial]),
+    TypeOrmModule.forFeature([
+      Order,
+      OrderManpower,
+      OrderSparePartMaterial,
+      OrderManpowerSupply,
+    ]),
     ClientModule,
     VehiculeModule,
     PricingModule,
@@ -33,6 +40,7 @@ import { ProviderModule } from '../provider/provider.module';
     UserModule,
     DriverModule,
     ProviderModule,
+    SupplyModule,
   ],
   exports: [TypeOrmModule],
 })

@@ -78,14 +78,10 @@ export class SeedService {
     // Seed Role
     const roles = [
       { name: 'Administrador' },
-      { name: 'Usuario' },
       { name: 'Contratista' },
       { name: 'Mecánico' },
       { name: 'Coordinador de Operaciones' },
       { name: 'Colaborador' },
-      { name: 'Almacenista' },
-      { name: 'Auxiliar Administrativo' },
-      { name: 'Cliente Externo' },
     ];
     for (const role of roles) {
       const exists = await this.roleRepository.findOne({
@@ -155,9 +151,31 @@ export class SeedService {
   }
 
   private async createVehiculeTypes() {
+    const vehiculeTypesToDelete = ['Cabezote', 'Tráiler '];
+    for (const typeName of vehiculeTypesToDelete) {
+      const existing = await this.vehiculeTypeRepository.findOne({
+        where: { name: typeName },
+      });
+      if (existing) {
+        await this.vehiculeTypeRepository.remove(existing);
+      }
+    }
+
     const vehiculeTypes = [
-      { name: 'Cabezote' },
-      { name: 'Tráiler ' },
+      { name: 'Tanque de acero Inoxidable' },
+      { name: 'Tanque de Acero al carbón' },
+      { name: 'Carrocería' },
+      { name: 'Volco' },
+      { name: 'Carbonero' },
+      { name: 'Plataforma' },
+      { name: 'Plancha' },
+      { name: 'Portacontenedor' },
+      { name: 'Linea Amarilla' },
+      { name: 'Mini cargador' },
+      { name: 'Furgón' },
+      { name: 'Camioneta' },
+      { name: 'Volqueta' },
+      { name: 'Tolva' },
       { name: 'Otro' },
     ];
 

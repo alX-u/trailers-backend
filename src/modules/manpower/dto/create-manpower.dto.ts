@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateManpowerDto {
   @IsString()
@@ -8,8 +8,4 @@ export class CreateManpowerDto {
   @IsString()
   @IsNotEmpty()
   type: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  unitaryCost: number;
 }

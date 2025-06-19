@@ -21,6 +21,8 @@ import { BillingService } from '../billing/billing.service';
 import { UserService } from '../user/user.service';
 import { DriverService } from '../driver/driver.service';
 import { ProviderService } from '../provider/provider.service';
+import { OrderManpowerSupply } from './entities/order-manpower-supply.entity';
+import { SupplyService } from '../supply/supply.service';
 
 @Injectable()
 export class OrderService {
@@ -39,6 +41,7 @@ export class OrderService {
     private readonly userService: UserService,
     private readonly driverService: DriverService,
     private readonly providerService: ProviderService,
+    private readonly supplyService: SupplyService,
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto) {
@@ -46,64 +49,33 @@ export class OrderService {
     const queryRunner = connection.createQueryRunner();
 
     await queryRunner.connect();
-    await queryRunner.startTransaction();
+    let transactionStarted = false;
 
     try {
-      // Buscar usuario asignado (assignTo)
-      let assignTo = null;
-      if (createOrderDto.assignTo) {
-        assignTo = await this.userService.getUserById(createOrderDto.assignTo);
-        if (!assignTo) {
-          throw new NotFoundException(
-            `User with id ${createOrderDto.assignTo} not found`,
-          );
-        }
-        const validRoles = ['Mecánico', 'Colaborador', 'Contratista'];
-        if (!validRoles.includes(assignTo.role.name)) {
-          throw new NotFoundException(
-            `User with id ${createOrderDto.assignTo} does not have a valid role (Mecánico, Colaborador, Contratista)`,
-          );
-        }
-      }
+      await queryRunner.startTransaction();
+      transactionStarted = true;
 
-      // 1. Buscar cliente por ID (si viene)
+      // Buscar entidades relacionadas solo si vienen en el DTO
       let client = null;
       if (createOrderDto.client) {
         client = await this.clientService.getClientById(createOrderDto.client);
-        if (!client) {
+        if (!client)
           throw new NotFoundException(
             `Client with id ${createOrderDto.client} not found`,
           );
-        }
       }
 
-      // 2. Buscar vehículo por ID (si viene)
       let vehicule = null;
       if (createOrderDto.vehicule) {
         vehicule = await this.vehiculeService.getVehiculeById(
           createOrderDto.vehicule,
         );
-        if (!vehicule) {
+        if (!vehicule)
           throw new NotFoundException(
-            `Vehículo con id ${createOrderDto.vehicule} no encontrado`,
+            `Vehicule with id ${createOrderDto.vehicule} not found`,
           );
-        }
       }
 
-      // Buscar conductor asignado (assignedDriver)
-      let assignedDriver = null;
-      if (createOrderDto.assignedDriver) {
-        assignedDriver = await this.driverService.getDriverById(
-          createOrderDto.assignedDriver,
-        );
-        if (!assignedDriver) {
-          throw new NotFoundException(
-            `Conductor con id ${createOrderDto.assignedDriver} no encontrado`,
-          );
-        }
-      }
-
-      // 3. Buscar estado de la orden (si viene)
       let orderStatus = null;
       if (createOrderDto.orderStatus) {
         orderStatus = await queryRunner.manager.findOne(OrderStatus, {
@@ -115,9 +87,46 @@ export class OrderService {
           );
       }
 
-      // 4. Resolver relaciones many-to-many (serviceTypes)
+      let assignedDriver = null;
+      if (createOrderDto.assignedDriver) {
+        assignedDriver = await this.driverService.getDriverById(
+          createOrderDto.assignedDriver,
+        );
+        if (!assignedDriver)
+          throw new NotFoundException(
+            `Driver with id ${createOrderDto.assignedDriver} not found`,
+          );
+      }
+
+      let assignTo = null;
+      if (
+        createOrderDto.assignTo &&
+        Array.isArray(createOrderDto.assignTo) &&
+        createOrderDto.assignTo.length > 0
+      ) {
+        assignTo = await Promise.all(
+          createOrderDto.assignTo.map(async (userId) => {
+            const user = await this.userService.getUserById(userId);
+            if (!user) {
+              throw new NotFoundException(`User with id ${userId} not found`);
+            }
+            // Opcional: validar roles permitidos
+            const validRoles = ['Mecánico', 'Colaborador', 'Contratista'];
+            if (!validRoles.includes(user.role.name)) {
+              throw new NotFoundException(
+                `User with id ${userId} does not have a valid role (Mecánico, Colaborador, Contratista)`,
+              );
+            }
+            return user;
+          }),
+        );
+      }
+
       let serviceTypes = [];
-      if (createOrderDto.serviceTypes) {
+      if (
+        createOrderDto.serviceTypes &&
+        createOrderDto.serviceTypes.length > 0
+      ) {
         serviceTypes = await Promise.all(
           createOrderDto.serviceTypes.map(async (id) => {
             const st = await this.serviceTypeService.getServiceTypeById(id);
@@ -130,9 +139,8 @@ export class OrderService {
         );
       }
 
-      // 5. Crear los pricings dentro de la transacción
       let pricings = [];
-      if (createOrderDto.pricings) {
+      if (createOrderDto.pricings && createOrderDto.pricings.length > 0) {
         pricings = await Promise.all(
           createOrderDto.pricings.map(async (pricingDto) => {
             const dto = {
@@ -147,9 +155,8 @@ export class OrderService {
         );
       }
 
-      // 5.5. Crear los billings dentro de la transacción
       let billings = [];
-      if (createOrderDto.billings) {
+      if (createOrderDto.billings && createOrderDto.billings.length > 0) {
         billings = await Promise.all(
           createOrderDto.billings.map(async (billingDto) => {
             const dto = {
@@ -164,9 +171,11 @@ export class OrderService {
         );
       }
 
-      // 6. Crear entidades pivot para sparePartMaterials
       let sparePartMaterials = [];
-      if (createOrderDto.sparePartMaterials) {
+      if (
+        createOrderDto.sparePartMaterials &&
+        createOrderDto.sparePartMaterials.length > 0
+      ) {
         sparePartMaterials = await Promise.all(
           createOrderDto.sparePartMaterials.map(async (spmDto) => {
             const spmEntity =
@@ -178,7 +187,6 @@ export class OrderService {
                 `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
               );
 
-            // Buscar el proveedor seleccionado
             let selectedProvider = null;
             if (spmDto.selectedProvider) {
               selectedProvider = await this.providerService.getProviderById(
@@ -203,9 +211,8 @@ export class OrderService {
         );
       }
 
-      // 7. Crear entidades pivot para manpowers
       let manpowers = [];
-      if (createOrderDto.manpowers) {
+      if (createOrderDto.manpowers && createOrderDto.manpowers.length > 0) {
         manpowers = await Promise.all(
           createOrderDto.manpowers.map(async (mpDto) => {
             const mpEntity = await this.manpowerService.getManpowerById(
@@ -215,46 +222,84 @@ export class OrderService {
               throw new NotFoundException(
                 `Manpower with id ${mpDto.manpower} not found`,
               );
-            return queryRunner.manager.create(OrderManpower, {
+
+            // Crea el OrderManpower sin supplies aún
+            const orderManpower = queryRunner.manager.create(OrderManpower, {
               manpower: mpEntity,
-              cantidad: mpDto.cantidad,
-              costoTotal: mpDto.costoTotal,
-              factorVenta: mpDto.factorVenta,
-              ventaUnitaria: mpDto.ventaUnitaria,
-              ventaTotal: mpDto.ventaTotal,
+              unitaryCost: mpDto.unitaryCost ?? null,
+              useDetail: mpDto.useDetail ?? null,
+              cantidad: mpDto.cantidad ?? null,
+              costoTotal: mpDto.costoTotal ?? null,
+              factorVenta: mpDto.factorVenta ?? null,
+              ventaUnitaria: mpDto.ventaUnitaria ?? null,
+              ventaTotal: mpDto.ventaTotal ?? null,
+              supplies: [],
             });
+
+            // Procesar supplies si existen
+            if (
+              mpDto.supplies &&
+              Array.isArray(mpDto.supplies) &&
+              mpDto.supplies.length > 0
+            ) {
+              orderManpower.supplies = await Promise.all(
+                mpDto.supplies.map(async (supplyDto) => {
+                  const supplyEntity = await this.supplyService.findOne(
+                    supplyDto.supply,
+                  );
+                  if (!supplyEntity)
+                    throw new NotFoundException(
+                      `Supply with id ${supplyDto.supply} not found`,
+                    );
+                  return queryRunner.manager.create(OrderManpowerSupply, {
+                    supply: supplyEntity,
+                    unitaryCost: supplyDto.unitaryCost ?? null,
+                    cantidad: supplyDto.cantidad ?? null,
+                    costoTotal: supplyDto.costoTotal ?? null,
+                    factorVenta: supplyDto.factorVenta ?? null,
+                    ventaUnitaria: supplyDto.ventaUnitaria ?? null,
+                    ventaTotal: supplyDto.ventaTotal ?? null,
+                  });
+                }),
+              );
+            }
+
+            return orderManpower;
           }),
         );
       }
 
-      // 8. Crear la orden
+      console.dir(manpowers, { depth: null });
+
       const order = queryRunner.manager.create(Order, {
-        orderNumber: createOrderDto.orderNumber ?? null,
         outDate: createOrderDto.outDate
           ? new Date(createOrderDto.outDate)
           : null,
         orderStatus: orderStatus ?? null,
-        serviceTypes: serviceTypes.length ? serviceTypes : null,
+        serviceTypes: serviceTypes.length > 0 ? serviceTypes : null,
         client: client ?? null,
         assignTo: assignTo ?? null,
         vehicule: vehicule ?? null,
-        pricings: pricings.length ? pricings : null,
-        billings: billings.length ? billings : null,
-        sparePartMaterials: sparePartMaterials.length
-          ? sparePartMaterials
-          : null,
-        manpowers: manpowers.length ? manpowers : null,
+        assignedDriver: assignedDriver ?? null,
+        pricings: pricings.length > 0 ? pricings : null,
+        billings: billings.length > 0 ? billings : null,
+        sparePartMaterials:
+          sparePartMaterials.length > 0 ? sparePartMaterials : null,
+        manpowers: manpowers.length > 0 ? manpowers : null,
         total: createOrderDto.totals ?? null,
         active: true,
       });
 
-      // 9. Guardar la orden
       const savedOrder = await queryRunner.manager.save(Order, order);
 
       await queryRunner.commitTransaction();
+      transactionStarted = false;
       return savedOrder;
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (transactionStarted) {
+        await queryRunner.rollbackTransaction();
+      }
+      console.error(error);
       throw new InternalServerErrorException(
         'Unexpected error while creating order',
       );
@@ -301,9 +346,6 @@ export class OrderService {
         'client.document.documentType',
         'vehicule',
         'vehicule.vehiculeType',
-        'vehicule.drivers',
-        'vehicule.drivers.document',
-        'vehicule.drivers.document.documentType',
         'assignedDriver',
         'assignedDriver.document',
         'assignedDriver.document.documentType',
@@ -314,6 +356,9 @@ export class OrderService {
         'sparePartMaterials.sparePartMaterial.providers',
         'manpowers',
         'manpowers.manpower',
+        'manpowers.supplies',
+        'manpowers.supplies.supply',
+        'manpowers.supplies.supply.providers',
         'billings',
         'billings.billedBy',
         'serviceTypes',
@@ -337,10 +382,7 @@ export class OrderService {
           'client.document',
           'client.document.documentType',
           'vehicule',
-          'vehicule.drivers',
-          'vehicule.drivers.document',
           'vehicule.vehiculeType',
-          'vehicule.drivers.document.documentType',
           'assignedDriver',
           'assignedDriver.document',
           'assignedDriver.document.documentType',
@@ -351,6 +393,9 @@ export class OrderService {
           'sparePartMaterials.sparePartMaterial.providers',
           'manpowers',
           'manpowers.manpower',
+          'manpowers.supplies',
+          'manpowers.supplies.supply',
+          'manpowers.supplies.supply.providers',
           'billings',
           'billings.billedBy',
           'serviceTypes',
@@ -399,8 +444,7 @@ export class OrderService {
       }
 
       // 2. Actualizar campos simples (pueden ser null)
-      if ('orderNumber' in updateOrderDto)
-        order.orderNumber = updateOrderDto.orderNumber ?? null;
+
       if ('outDate' in updateOrderDto)
         order.outDate = updateOrderDto.outDate
           ? new Date(updateOrderDto.outDate)
@@ -426,21 +470,22 @@ export class OrderService {
       }
 
       if ('assignTo' in updateOrderDto) {
-        if (updateOrderDto.assignTo) {
-          const assignTo = await this.userService.getUserById(
-            updateOrderDto.assignTo,
+        if (updateOrderDto.assignTo && Array.isArray(updateOrderDto.assignTo)) {
+          const assignTo = await Promise.all(
+            updateOrderDto.assignTo.map(async (userId) => {
+              const user = await this.userService.getUserById(userId);
+              if (!user) {
+                throw new NotFoundException(`User with id ${userId} not found`);
+              }
+              const validRoles = ['Mecánico', 'Colaborador', 'Contratista'];
+              if (!validRoles.includes(user.role.name)) {
+                throw new NotFoundException(
+                  `User with id ${userId} does not have a valid role (Mecánico, Colaborador, Contratista)`,
+                );
+              }
+              return user;
+            }),
           );
-          if (!assignTo) {
-            throw new NotFoundException(
-              `User with id ${updateOrderDto.assignTo} not found`,
-            );
-          }
-          const validRoles = ['Mecánico', 'Colaborador', 'Contratista'];
-          if (!validRoles.includes(assignTo.role.name)) {
-            throw new NotFoundException(
-              `User with id ${updateOrderDto.assignTo} does not have a valid role (Mecánico, Colaborador, Contratista)`,
-            );
-          }
           order.assignTo = assignTo;
         } else {
           order.assignTo = null;
@@ -571,6 +616,7 @@ export class OrderService {
                 order,
                 sparePartMaterial: spmEntity,
                 selectedProvider,
+                unitaryCost: spmDto.unitaryCost ?? null,
                 cantidad: spmDto.cantidad,
                 costoTotal: spmDto.costoTotal,
                 factorVenta: spmDto.factorVenta,
@@ -586,12 +632,14 @@ export class OrderService {
 
       // 8. Actualizar manpowers (puede ser null o array vacío)
       if ('manpowers' in updateOrderDto) {
+        // Elimina los manpowers y sus supplies anteriores
         await queryRunner.manager.delete(OrderManpower, {
           order: { idOrder: id },
         });
 
-        if (updateOrderDto.manpowers) {
-          order.manpowers = await Promise.all(
+        if (updateOrderDto.manpowers && updateOrderDto.manpowers.length > 0) {
+          // Primero crea los nuevos OrderManpower sin supplies
+          const newManpowers = await Promise.all(
             updateOrderDto.manpowers.map(async (mpDto) => {
               const mpEntity = await this.manpowerService.getManpowerById(
                 mpDto.manpower,
@@ -600,17 +648,63 @@ export class OrderService {
                 throw new NotFoundException(
                   `Manpower with id ${mpDto.manpower} not found`,
                 );
+
               return queryRunner.manager.create(OrderManpower, {
                 order,
                 manpower: mpEntity,
-                cantidad: mpDto.cantidad,
-                costoTotal: mpDto.costoTotal,
-                factorVenta: mpDto.factorVenta,
-                ventaUnitaria: mpDto.ventaUnitaria,
-                ventaTotal: mpDto.ventaTotal,
+                unitaryCost: mpDto.unitaryCost ?? null,
+                useDetail: mpDto.useDetail ?? null,
+                cantidad: mpDto.cantidad ?? null,
+                costoTotal: mpDto.costoTotal ?? null,
+                factorVenta: mpDto.factorVenta ?? null,
+                ventaUnitaria: mpDto.ventaUnitaria ?? null,
+                ventaTotal: mpDto.ventaTotal ?? null,
+                supplies: [],
               });
             }),
           );
+
+          // Guarda los nuevos manpowers (sin supplies)
+          const savedManpowers = await queryRunner.manager.save(
+            OrderManpower,
+            newManpowers,
+          );
+
+          // Ahora crea y guarda los supplies para cada manpower
+          for (const orderManpower of savedManpowers) {
+            const mpDto = updateOrderDto.manpowers.find(
+              (mp) => mp.manpower === orderManpower.manpower.idManpower,
+            );
+            if (mpDto && mpDto.supplies && mpDto.supplies.length > 0) {
+              const supplies = await Promise.all(
+                mpDto.supplies.map(async (supplyDto) => {
+                  const supplyEntity = await this.supplyService.findOne(
+                    supplyDto.supply,
+                  );
+                  if (!supplyEntity)
+                    throw new NotFoundException(
+                      `Supply with id ${supplyDto.supply} not found`,
+                    );
+                  return queryRunner.manager.create(OrderManpowerSupply, {
+                    supply: supplyEntity,
+                    orderManpower, // relación inversa obligatoria
+                    unitaryCost: supplyDto.unitaryCost ?? null,
+                    cantidad: supplyDto.cantidad ?? null,
+                    costoTotal: supplyDto.costoTotal ?? null,
+                    factorVenta: supplyDto.factorVenta ?? null,
+                    ventaUnitaria: supplyDto.ventaUnitaria ?? null,
+                    ventaTotal: supplyDto.ventaTotal ?? null,
+                  });
+                }),
+              );
+              // Guarda los supplies y actualiza la relación en la base de datos
+              await queryRunner.manager.save(OrderManpowerSupply, supplies);
+              orderManpower.supplies = supplies;
+              await queryRunner.manager.save(OrderManpower, orderManpower);
+            }
+          }
+
+          order.manpowers = savedManpowers;
         } else {
           order.manpowers = null;
         }

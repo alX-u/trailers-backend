@@ -1,8 +1,7 @@
 import {
-  ArrayNotEmpty,
-  IsArray,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   IsUUID,
   Min,
@@ -18,16 +17,11 @@ export class CreateVehiculeDto {
   placaTrailer: string;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   @Min(0)
-  kmsSalida: number;
+  kmsSalida?: number;
 
   @IsUUID()
   @IsNotEmpty()
   vehiculeType: string;
-
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsUUID('all', { each: true })
-  drivers: string[];
 }

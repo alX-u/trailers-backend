@@ -20,6 +20,9 @@ export class OrderSparePartMaterial {
   sparePartMaterial: SparePartMaterial;
 
   @Column({ nullable: true })
+  unitaryCost: number;
+
+  @Column({ nullable: true })
   cantidad: number;
 
   @Column('float')

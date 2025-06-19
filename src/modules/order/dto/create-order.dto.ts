@@ -3,17 +3,12 @@ import {
   IsDateString,
   IsObject,
   IsOptional,
-  IsString,
   IsUUID,
 } from 'class-validator';
 import { CreateBillingDto } from 'src/modules/billing/dto/create-billing.dto';
 import { CreatePricingDto } from 'src/modules/pricing/dto/create-pricing.dto';
 
 export class CreateOrderDto {
-  @IsString()
-  @IsOptional()
-  orderNumber?: string;
-
   @IsDateString()
   @IsOptional()
   outDate?: Date;
@@ -26,9 +21,9 @@ export class CreateOrderDto {
   @IsOptional()
   serviceTypes?: string[];
 
-  @IsUUID()
+  @IsArray()
   @IsOptional()
-  assignTo?: string;
+  assignTo?: string[];
 
   @IsUUID()
   @IsOptional()
@@ -55,6 +50,7 @@ export class CreateOrderDto {
   sparePartMaterials?: {
     sparePartMaterial: string;
     selectedProvider: string;
+    unitaryCost?: number;
     cantidad: number;
     costoTotal: number;
     factorVenta: number;
@@ -66,6 +62,17 @@ export class CreateOrderDto {
   @IsOptional()
   manpowers?: {
     manpower: string;
+    supplies?: {
+      supply: string;
+      unitaryCost?: number;
+      cantidad: number;
+      costoTotal: number;
+      factorVenta: number;
+      ventaUnitaria: number;
+      ventaTotal: number;
+    }[];
+    unitaryCost?: number;
+    useDetail: string;
     cantidad: number;
     costoTotal: number;
     factorVenta: number;

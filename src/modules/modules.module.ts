@@ -17,6 +17,7 @@ import { UserStatusModule } from './user-status/user-status.module';
 import { UserModule } from './user/user.module';
 import { VehiculeTypeModule } from './vehicule-type/vehicule-type.module';
 import { VehiculeModule } from './vehicule/vehicule.module';
+import { SupplyModule } from './supply/supply.module';
 
 // Import other modules here as needed
 
@@ -40,6 +41,7 @@ import { VehiculeModule } from './vehicule/vehicule.module';
     UserStatusModule,
     VehiculeModule,
     VehiculeTypeModule,
+    SupplyModule,
   ],
   exports: [
     BillingModule,

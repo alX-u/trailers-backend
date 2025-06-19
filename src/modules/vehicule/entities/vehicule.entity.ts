@@ -1,4 +1,3 @@
-import { Driver } from 'src/modules/driver/entities/driver.entity';
 import { Order } from 'src/modules/order/entities/order.entity';
 import { VehiculeType } from 'src/modules/vehicule-type/entities/vehicule-type.entity';
 import {
@@ -6,8 +5,6 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -25,7 +22,7 @@ export class Vehicule {
   @Column()
   placaTrailer: string;
 
-  @Column()
+  @Column({ nullable: true })
   kmsSalida: number;
 
   @Column({ default: true })
@@ -35,14 +32,6 @@ export class Vehicule {
   @ManyToOne(() => VehiculeType, (vehiculeType) => vehiculeType.vehicules)
   @JoinColumn({ name: 'vehiculeType' })
   vehiculeType: VehiculeType;
-
-  @ManyToMany(() => Driver, (driver) => driver.vehicules)
-  @JoinTable({
-    name: 'vehicule_driver',
-    joinColumn: { name: 'vehiculeId', referencedColumnName: 'idVehicule' },
-    inverseJoinColumn: { name: 'driverId', referencedColumnName: 'idDriver' },
-  })
-  drivers: Driver[];
 
   @OneToMany(() => Order, (order) => order.idOrder)
   orders: Order[];
