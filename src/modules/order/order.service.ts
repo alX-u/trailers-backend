@@ -280,6 +280,7 @@ export class OrderService {
         client: client ?? null,
         assignTo: assignTo ?? null,
         vehicule: vehicule ?? null,
+        kilometers: createOrderDto.kilometers ?? null,
         assignedDriver: assignedDriver ?? null,
         pricings: pricings.length > 0 ? pricings : null,
         billings: billings.length > 0 ? billings : null,
@@ -452,6 +453,9 @@ export class OrderService {
       if ('active' in updateOrderDto) order.active = updateOrderDto.active;
       if ('totals' in updateOrderDto)
         order.total = updateOrderDto.totals ?? null;
+      if ('kilometers' in updateOrderDto) {
+        order.kilometers = updateOrderDto.kilometers ?? null;
+      }
 
       // 3. Actualizar estado de la orden (puede ser null)
       if ('orderStatus' in updateOrderDto) {

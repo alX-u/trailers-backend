@@ -1,9 +1,11 @@
 import {
   IsArray,
   IsDateString,
+  IsNumber,
   IsObject,
   IsOptional,
   IsUUID,
+  Min,
 } from 'class-validator';
 import { CreateBillingDto } from 'src/modules/billing/dto/create-billing.dto';
 import { CreatePricingDto } from 'src/modules/pricing/dto/create-pricing.dto';
@@ -32,6 +34,11 @@ export class CreateOrderDto {
   @IsUUID()
   @IsOptional()
   vehicule?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  kilometers?: number;
 
   @IsUUID()
   @IsOptional()

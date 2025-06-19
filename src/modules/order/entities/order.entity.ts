@@ -53,6 +53,9 @@ export class Order {
   @JoinColumn({ name: 'vehicule' })
   vehicule?: Vehicule;
 
+  @Column({ nullable: true })
+  kilometers: number;
+
   @ManyToOne(() => Driver, (driver) => driver.idDriver, { nullable: true })
   @JoinColumn({ name: 'assignedDriver' })
   assignedDriver?: Driver;
