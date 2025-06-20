@@ -63,9 +63,9 @@ export class ManpowerService {
     const manpower = await this.manpowerRepository.findOne({
       where: { idManpower: id, active: true },
       relations: [
-        'contractor',
-        'contractor.document',
-        'contractor.document.documentType',
+        'contractors',
+        'contractors.document',
+        'contractors.document.documentType',
       ],
     });
     if (!manpower) {

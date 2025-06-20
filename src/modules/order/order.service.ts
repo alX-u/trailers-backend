@@ -328,9 +328,7 @@ export class OrderService {
         await queryRunner.rollbackTransaction();
       }
       console.error(error);
-      throw new InternalServerErrorException(
-        'Unexpected error while creating order',
-      );
+      throw new InternalServerErrorException(error.message);
     } finally {
       await queryRunner.release();
     }
@@ -496,7 +494,6 @@ export class OrderService {
       }
 
       // 2. Actualizar campos simples (pueden ser null)
-
       if ('outDate' in updateOrderDto)
         order.outDate = updateOrderDto.outDate
           ? new Date(updateOrderDto.outDate)
@@ -588,7 +585,7 @@ export class OrderService {
           );
           if (!assignedDriver) {
             throw new NotFoundException(
-              `Conductor con id ${updateOrderDto.assignedDriver} no encontrado`,
+              `Driver with id ${updateOrderDto.assignedDriver} not found`,
             );
           }
           order.assignedDriver = assignedDriver;
@@ -655,7 +652,6 @@ export class OrderService {
                   `SparePartMaterial with id ${spmDto.sparePartMaterial} not found`,
                 );
 
-              // Buscar el proveedor seleccionado
               let selectedProvider = null;
               if (spmDto.selectedProvider) {
                 selectedProvider = await this.providerService.getProviderById(
@@ -817,9 +813,7 @@ export class OrderService {
       return updatedOrder;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new InternalServerErrorException(
-        'Unexpected error while updating order',
-      );
+      throw new InternalServerErrorException(error.message);
     } finally {
       await queryRunner.release();
     }
@@ -846,11 +840,9 @@ export class OrderService {
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
-        throw error;
+        throw error.message;
       }
-      throw new InternalServerErrorException(
-        'Unexpected error while soft deleting order',
-      );
+      throw new InternalServerErrorException(error.message);
     }
   }
 }
