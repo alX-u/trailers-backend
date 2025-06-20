@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateManpowerDto {
   @IsString()
@@ -9,7 +15,8 @@ export class CreateManpowerDto {
   @IsNotEmpty()
   type: string;
 
-  @IsUUID()
+  @IsArray()
+  @IsUUID('all', { each: true })
   @IsOptional()
-  contractor?: string;
+  contractors?: string[];
 }

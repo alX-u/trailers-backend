@@ -5,5 +5,5 @@ import { IsBoolean, IsOptional } from 'class-validator';
 export class UpdateManpowerDto extends PartialType(CreateManpowerDto) {
   @IsOptional()
   @IsBoolean()
-  active: boolean;
+  active?: boolean;
 }

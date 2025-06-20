@@ -15,22 +15,27 @@ export class ManpowerService {
   ) {}
 
   async createManpower(createManpowerDto: CreateManpowerDto) {
-    const { name, type, contractor } = createManpowerDto;
+    const { name, type, contractors } = createManpowerDto;
 
-    let contractorUser = null;
-    if (contractor) {
-      contractorUser = await this.userService.getUserById(contractor);
-      if (!contractorUser) {
-        throw new NotFoundException(
-          `User (contractor) with id ${contractor} not found`,
-        );
-      }
+    let contractorUsers = [];
+    if (contractors && contractors.length > 0) {
+      contractorUsers = await Promise.all(
+        contractors.map(async (contractorId) => {
+          const user = await this.userService.getUserById(contractorId);
+          if (!user) {
+            throw new NotFoundException(
+              `User (contractor) with id ${contractorId} not found`,
+            );
+          }
+          return user;
+        }),
+      );
     }
 
     const manpower = this.manpowerRepository.create({
       name,
       type,
-      contractor: contractorUser,
+      contractors: contractorUsers,
       active: true,
     });
 
@@ -47,9 +52,9 @@ export class ManpowerService {
       where: whereClause,
       order: { createdAt: 'DESC' },
       relations: [
-        'contractor',
-        'contractor.document',
-        'contractor.document.documentType',
+        'contractors',
+        'contractors.document',
+        'contractors.document.documentType',
       ],
     });
   }
@@ -73,9 +78,9 @@ export class ManpowerService {
     const manpower = await this.manpowerRepository.findOne({
       where: { idManpower: id, active: true },
       relations: [
-        'contractor',
-        'contractor.document',
-        'contractor.document.documentType',
+        'contractors',
+        'contractors.document',
+        'contractors.document.documentType',
       ],
     });
     if (!manpower) {
@@ -89,19 +94,25 @@ export class ManpowerService {
     if (updateManpowerDto.active !== undefined)
       manpower.active = updateManpowerDto.active;
 
-    if (updateManpowerDto.contractor !== undefined) {
-      if (updateManpowerDto.contractor) {
-        const contractorUser = await this.userService.getUserById(
-          updateManpowerDto.contractor,
+    if (updateManpowerDto.contractors !== undefined) {
+      if (
+        updateManpowerDto.contractors &&
+        updateManpowerDto.contractors.length > 0
+      ) {
+        const contractorUsers = await Promise.all(
+          updateManpowerDto.contractors.map(async (contractorId) => {
+            const user = await this.userService.getUserById(contractorId);
+            if (!user) {
+              throw new NotFoundException(
+                `User (contractor) with id ${contractorId} not found`,
+              );
+            }
+            return user;
+          }),
         );
-        if (!contractorUser) {
-          throw new NotFoundException(
-            `User (contractor) with id ${updateManpowerDto.contractor} not found`,
-          );
-        }
-        manpower.contractor = contractorUser;
+        manpower.contractors = contractorUsers;
       } else {
-        manpower.contractor = null;
+        manpower.contractors = [];
       }
     }
 

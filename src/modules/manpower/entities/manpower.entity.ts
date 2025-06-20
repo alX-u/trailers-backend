@@ -3,7 +3,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -19,8 +20,19 @@ export class Manpower {
   @Column()
   type: string;
 
-  @ManyToOne(() => User, (user) => user.idUser, { nullable: true })
-  contractor: User;
+  @ManyToMany(() => User)
+  @JoinTable({
+    name: 'manpower_contractors',
+    joinColumn: {
+      name: 'manpowerId',
+      referencedColumnName: 'idManpower',
+    },
+    inverseJoinColumn: {
+      name: 'userId',
+      referencedColumnName: 'idUser',
+    },
+  })
+  contractors: User[];
 
   @Column({ default: true })
   active: boolean;

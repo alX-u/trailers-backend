@@ -56,7 +56,7 @@ export class CreateOrderDto {
   @IsOptional()
   sparePartMaterials?: {
     sparePartMaterial: string;
-    selectedProvider: string;
+    selectedProvider?: string;
     unitaryCost?: number;
     cantidad: number;
     costoTotal: number;
@@ -71,6 +71,7 @@ export class CreateOrderDto {
     manpower: string;
     supplies?: {
       supply: string;
+      selectedProvider?: string;
       unitaryCost?: number;
       cantidad: number;
       costoTotal: number;
@@ -78,6 +79,7 @@ export class CreateOrderDto {
       ventaUnitaria: number;
       ventaTotal: number;
     }[];
+    selectedContractor?: string;
     unitaryCost?: number;
     useDetail: string;
     cantidad: number;

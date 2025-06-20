@@ -223,9 +223,22 @@ export class OrderService {
                 `Manpower with id ${mpDto.manpower} not found`,
               );
 
+            // Buscar selectedContractor si viene
+            let selectedContractor = null;
+            if (mpDto.selectedContractor) {
+              selectedContractor = await this.userService.getUserById(
+                mpDto.selectedContractor,
+              );
+              if (!selectedContractor)
+                throw new NotFoundException(
+                  `User (contractor) with id ${mpDto.selectedContractor} not found`,
+                );
+            }
+
             // Crea el OrderManpower sin supplies aún
             const orderManpower = queryRunner.manager.create(OrderManpower, {
               manpower: mpEntity,
+              selectedContractor,
               unitaryCost: mpDto.unitaryCost ?? null,
               useDetail: mpDto.useDetail ?? null,
               cantidad: mpDto.cantidad ?? null,
@@ -251,8 +264,22 @@ export class OrderService {
                     throw new NotFoundException(
                       `Supply with id ${supplyDto.supply} not found`,
                     );
+
+                  // Buscar selectedProvider si viene
+                  let selectedProvider = null;
+                  if (supplyDto.selectedProvider) {
+                    selectedProvider =
+                      await this.providerService.getProviderById(
+                        supplyDto.selectedProvider,
+                      );
+                    if (!selectedProvider)
+                      throw new NotFoundException(
+                        `Provider with id ${supplyDto.selectedProvider} not found`,
+                      );
+                  }
                   return queryRunner.manager.create(OrderManpowerSupply, {
                     supply: supplyEntity,
+                    selectedProvider,
                     unitaryCost: supplyDto.unitaryCost ?? null,
                     cantidad: supplyDto.cantidad ?? null,
                     costoTotal: supplyDto.costoTotal ?? null,
@@ -355,6 +382,9 @@ export class OrderService {
         'pricings.pricedBy',
         'sparePartMaterials',
         'sparePartMaterials.sparePartMaterial.providers',
+        'sparePartMaterials.selectedProvider',
+        'sparePartMaterials.selectedProvider.document',
+        'sparePartMaterials.selectedProvider.document.documentType',
         'manpowers',
         'manpowers.manpower',
         'manpowers.manpower.contractor',
@@ -395,6 +425,9 @@ export class OrderService {
           'pricings.pricedBy',
           'sparePartMaterials',
           'sparePartMaterials.sparePartMaterial.providers',
+          'sparePartMaterials.selectedProvider',
+          'sparePartMaterials.selectedProvider.document',
+          'sparePartMaterials.selectedProvider.document.documentType',
           'manpowers',
           'manpowers.manpower',
           'manpowers.manpower.contractor',
@@ -659,9 +692,22 @@ export class OrderService {
                   `Manpower with id ${mpDto.manpower} not found`,
                 );
 
+              // Buscar selectedContractor si viene
+              let selectedContractor = null;
+              if (mpDto.selectedContractor) {
+                selectedContractor = await this.userService.getUserById(
+                  mpDto.selectedContractor,
+                );
+                if (!selectedContractor)
+                  throw new NotFoundException(
+                    `User (contractor) with id ${mpDto.selectedContractor} not found`,
+                  );
+              }
+
               return queryRunner.manager.create(OrderManpower, {
                 order,
                 manpower: mpEntity,
+                selectedContractor,
                 unitaryCost: mpDto.unitaryCost ?? null,
                 useDetail: mpDto.useDetail ?? null,
                 cantidad: mpDto.cantidad ?? null,
@@ -695,9 +741,23 @@ export class OrderService {
                     throw new NotFoundException(
                       `Supply with id ${supplyDto.supply} not found`,
                     );
+
+                  // Buscar selectedProvider si viene
+                  let selectedProvider = null;
+                  if (supplyDto.selectedProvider) {
+                    selectedProvider =
+                      await this.providerService.getProviderById(
+                        supplyDto.selectedProvider,
+                      );
+                    if (!selectedProvider)
+                      throw new NotFoundException(
+                        `Provider with id ${supplyDto.selectedProvider} not found`,
+                      );
+                  }
+
                   return queryRunner.manager.create(OrderManpowerSupply, {
                     supply: supplyEntity,
-                    orderManpower, // relación inversa obligatoria
+                    selectedProvider,
                     unitaryCost: supplyDto.unitaryCost ?? null,
                     cantidad: supplyDto.cantidad ?? null,
                     costoTotal: supplyDto.costoTotal ?? null,

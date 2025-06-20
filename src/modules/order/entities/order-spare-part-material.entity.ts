@@ -20,10 +20,10 @@ export class OrderSparePartMaterial {
   sparePartMaterial: SparePartMaterial;
 
   @Column({ nullable: true })
-  unitaryCost: number;
+  unitaryCost?: number;
 
   @Column({ nullable: true })
-  cantidad: number;
+  cantidad?: number;
 
   @Column('float')
   costoTotal: number;

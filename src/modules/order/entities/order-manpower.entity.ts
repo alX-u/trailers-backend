@@ -8,6 +8,7 @@ import {
 import { Order } from './order.entity';
 import { Manpower } from 'src/modules/manpower/entities/manpower.entity';
 import { OrderManpowerSupply } from 'src/modules/order/entities/order-manpower-supply.entity';
+import { User } from 'src/modules/user/entities/user.entity';
 
 @Entity()
 export class OrderManpower {
@@ -20,8 +21,11 @@ export class OrderManpower {
   @ManyToOne(() => Manpower, { eager: true })
   manpower: Manpower;
 
+  @ManyToOne(() => User, (user) => user.idUser, { eager: true, nullable: true })
+  selectedContractor?: User;
+
   @Column({ nullable: true })
-  unitaryCost: number;
+  unitaryCost?: number;
 
   @OneToMany(
     () => OrderManpowerSupply,
@@ -31,20 +35,20 @@ export class OrderManpower {
   supplies?: OrderManpowerSupply[] | null;
 
   @Column({ nullable: true })
-  useDetail: string;
+  useDetail?: string;
 
   @Column({ nullable: true })
-  cantidad: number;
+  cantidad?: number;
 
   @Column('float', { nullable: true })
-  costoTotal: number;
+  costoTotal?: number;
 
   @Column('float', { nullable: true })
-  factorVenta: number;
+  factorVenta?: number;
 
   @Column('float', { nullable: true })
-  ventaUnitaria: number;
+  ventaUnitaria?: number;
 
   @Column('float', { nullable: true })
-  ventaTotal: number;
+  ventaTotal?: number;
 }
