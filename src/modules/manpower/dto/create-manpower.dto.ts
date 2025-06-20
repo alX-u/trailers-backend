@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateManpowerDto {
   @IsString()
@@ -8,4 +8,8 @@ export class CreateManpowerDto {
   @IsString()
   @IsNotEmpty()
   type: string;
+
+  @IsUUID()
+  @IsOptional()
+  contractor?: string;
 }

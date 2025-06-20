@@ -1,7 +1,9 @@
+import { User } from 'src/modules/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -16,6 +18,9 @@ export class Manpower {
 
   @Column()
   type: string;
+
+  @ManyToOne(() => User, (user) => user.idUser, { nullable: true })
+  contractor: User;
 
   @Column({ default: true })
   active: boolean;
