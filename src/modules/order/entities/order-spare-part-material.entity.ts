@@ -13,8 +13,11 @@ export class OrderSparePartMaterial {
   })
   order: Order;
 
-  @ManyToOne(() => Provider, (provider) => provider.idProvider, { eager: true })
-  selectedProvider: Provider;
+  @ManyToOne(() => Provider, (provider) => provider.idProvider, {
+    eager: true,
+    nullable: true,
+  })
+  selectedProvider?: Provider;
 
   @ManyToOne(() => SparePartMaterial, { eager: true })
   sparePartMaterial: SparePartMaterial;
@@ -24,16 +27,15 @@ export class OrderSparePartMaterial {
 
   @Column({ nullable: true })
   cantidad?: number;
+  @Column('float', { nullable: true })
+  costoTotal?: number;
 
-  @Column('float')
-  costoTotal: number;
+  @Column('float', { nullable: true })
+  factorVenta?: number;
 
-  @Column('float')
-  factorVenta: number;
+  @Column('float', { nullable: true })
+  ventaUnitaria?: number;
 
-  @Column('float')
-  ventaUnitaria: number;
-
-  @Column('float')
-  ventaTotal: number;
+  @Column('float', { nullable: true })
+  ventaTotal?: number;
 }

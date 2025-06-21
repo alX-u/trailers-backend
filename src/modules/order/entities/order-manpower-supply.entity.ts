@@ -29,5 +29,5 @@ export class OrderManpowerSupply {
   cantidad?: number;
 
   @Column('float', { nullable: true })
-  costoTotal: number;
+  costoTotal?: number;
 }

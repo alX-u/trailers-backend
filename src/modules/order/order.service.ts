@@ -201,11 +201,11 @@ export class OrderService {
             return queryRunner.manager.create(OrderSparePartMaterial, {
               sparePartMaterial: spmEntity,
               selectedProvider,
-              cantidad: spmDto.cantidad,
-              costoTotal: spmDto.costoTotal,
-              factorVenta: spmDto.factorVenta,
-              ventaUnitaria: spmDto.ventaUnitaria,
-              ventaTotal: spmDto.ventaTotal,
+              cantidad: spmDto.cantidad ?? null,
+              costoTotal: spmDto.costoTotal ?? null,
+              factorVenta: spmDto.factorVenta ?? null,
+              ventaUnitaria: spmDto.ventaUnitaria ?? null,
+              ventaTotal: spmDto.ventaTotal ?? null,
             });
           }),
         );
@@ -665,11 +665,11 @@ export class OrderService {
                 sparePartMaterial: spmEntity,
                 selectedProvider,
                 unitaryCost: spmDto.unitaryCost ?? null,
-                cantidad: spmDto.cantidad,
-                costoTotal: spmDto.costoTotal,
-                factorVenta: spmDto.factorVenta,
-                ventaUnitaria: spmDto.ventaUnitaria,
-                ventaTotal: spmDto.ventaTotal,
+                cantidad: spmDto.cantidad ?? null,
+                costoTotal: spmDto.costoTotal ?? null,
+                factorVenta: spmDto.factorVenta ?? null,
+                ventaUnitaria: spmDto.ventaUnitaria ?? null,
+                ventaTotal: spmDto.ventaTotal ?? null,
               });
             }),
           );

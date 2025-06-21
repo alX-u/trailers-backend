@@ -58,11 +58,11 @@ export class CreateOrderDto {
     sparePartMaterial: string;
     selectedProvider?: string;
     unitaryCost?: number;
-    cantidad: number;
-    costoTotal: number;
-    factorVenta: number;
-    ventaUnitaria: number;
-    ventaTotal: number;
+    cantidad?: number;
+    costoTotal?: number;
+    factorVenta?: number;
+    ventaUnitaria?: number;
+    ventaTotal?: number;
   }[];
 
   @IsArray()
@@ -70,20 +70,20 @@ export class CreateOrderDto {
   manpowers?: {
     manpower: string;
     supplies?: {
-      supply: string;
+      supply?: string;
       selectedProvider?: string;
       unitaryCost?: number;
-      cantidad: number;
-      costoTotal: number;
+      cantidad?: number;
+      costoTotal?: number;
     }[];
     selectedContractor?: string;
     unitaryCost?: number;
-    useDetail: string;
-    cantidad: number;
-    costoTotal: number;
-    factorVenta: number;
-    ventaUnitaria: number;
-    ventaTotal: number;
+    useDetail?: string;
+    cantidad?: number;
+    costoTotal?: number;
+    factorVenta?: number;
+    ventaUnitaria?: number;
+    ventaTotal?: number;
   }[];
 
   @IsObject()
