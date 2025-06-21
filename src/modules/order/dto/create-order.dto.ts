@@ -75,9 +75,6 @@ export class CreateOrderDto {
       unitaryCost?: number;
       cantidad: number;
       costoTotal: number;
-      factorVenta: number;
-      ventaUnitaria: number;
-      ventaTotal: number;
     }[];
     selectedContractor?: string;
     unitaryCost?: number;

@@ -30,13 +30,4 @@ export class OrderManpowerSupply {
 
   @Column('float', { nullable: true })
   costoTotal: number;
-
-  @Column('float', { nullable: true })
-  factorVenta?: number;
-
-  @Column('float', { nullable: true })
-  ventaUnitaria?: number;
-
-  @Column('float', { nullable: true })
-  ventaTotal?: number;
 }

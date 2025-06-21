@@ -18,9 +18,6 @@ export class SparePartMaterial {
   name: string;
 
   @Column()
-  type: string;
-
-  @Column()
   measurementUnit: string;
 
   @Column({ default: true })

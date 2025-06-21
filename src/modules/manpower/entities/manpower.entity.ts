@@ -17,9 +17,6 @@ export class Manpower {
   @Column()
   name: string;
 
-  @Column()
-  type: string;
-
   @ManyToMany(() => User)
   @JoinTable({
     name: 'manpower_contractors',

@@ -11,10 +11,6 @@ export class CreateManpowerDto {
   @IsNotEmpty()
   name: string;
 
-  @IsString()
-  @IsNotEmpty()
-  type: string;
-
   @IsArray()
   @IsUUID('all', { each: true })
   @IsOptional()

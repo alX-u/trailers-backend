@@ -283,9 +283,6 @@ export class OrderService {
                     unitaryCost: supplyDto.unitaryCost ?? null,
                     cantidad: supplyDto.cantidad ?? null,
                     costoTotal: supplyDto.costoTotal ?? null,
-                    factorVenta: supplyDto.factorVenta ?? null,
-                    ventaUnitaria: supplyDto.ventaUnitaria ?? null,
-                    ventaTotal: supplyDto.ventaTotal ?? null,
                   });
                 }),
               );
@@ -769,9 +766,6 @@ export class OrderService {
                     unitaryCost: supplyDto.unitaryCost ?? null,
                     cantidad: supplyDto.cantidad ?? null,
                     costoTotal: supplyDto.costoTotal ?? null,
-                    factorVenta: supplyDto.factorVenta ?? null,
-                    ventaUnitaria: supplyDto.ventaUnitaria ?? null,
-                    ventaTotal: supplyDto.ventaTotal ?? null,
                   });
                 }),
               );

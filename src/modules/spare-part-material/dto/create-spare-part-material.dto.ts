@@ -13,10 +13,6 @@ export class CreateSparePartMaterialDto {
 
   @IsString()
   @IsNotEmpty()
-  type: string;
-
-  @IsString()
-  @IsNotEmpty()
   measurementUnit: string;
 
   @IsArray()
