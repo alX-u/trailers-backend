@@ -92,7 +92,7 @@ export class VehiculeService {
 
     const vehicule = await repo.findOne({
       where: { idVehicule: id, active: true },
-      relations: ['vehiculeType', 'drivers'],
+      relations: ['vehiculeType'],
     });
     if (!vehicule) {
       throw new NotFoundException(`Vehicule with id ${id} not found`);
