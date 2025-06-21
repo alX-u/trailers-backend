@@ -15,7 +15,7 @@ export class ManpowerService {
   ) {}
 
   async createManpower(createManpowerDto: CreateManpowerDto) {
-    const { name, type, contractors } = createManpowerDto;
+    const { name, contractors } = createManpowerDto;
 
     let contractorUsers = [];
     if (contractors && contractors.length > 0) {
@@ -34,7 +34,7 @@ export class ManpowerService {
 
     const manpower = this.manpowerRepository.create({
       name,
-      type,
+
       contractors: contractorUsers,
       active: true,
     });
@@ -89,8 +89,6 @@ export class ManpowerService {
 
     if (updateManpowerDto.name !== undefined)
       manpower.name = updateManpowerDto.name;
-    if (updateManpowerDto.type !== undefined)
-      manpower.type = updateManpowerDto.type;
     if (updateManpowerDto.active !== undefined)
       manpower.active = updateManpowerDto.active;
 
