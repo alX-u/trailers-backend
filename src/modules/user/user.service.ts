@@ -70,8 +70,8 @@ export class UserService {
         );
       }
 
-      //The idea is to send an email through sendgrid or some platform with a temp generated password
-      // for the user. This is a placeholder for the actual implementation.
+      //Todo: The idea is to send an email through sendgrid or some platform with a temp generated password
+      // Todo: for the user. This is a placeholder for the actual implementation.
       const tempPassword = 'tempPassword';
 
       // Create a new User instance
@@ -168,6 +168,32 @@ export class UserService {
       }
 
       return user;
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
+  }
+
+  async getUserByFilter(query: Partial<User>) {
+    try {
+      // Remove undefined/null values from query
+      const cleanQuery: any = {};
+      Object.entries(query).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          cleanQuery[key] = value;
+        }
+      });
+
+      const users = await this.userRepository.find({
+        where: cleanQuery,
+        relations: ['role', 'userStatus', 'document', 'document.documentType'],
+        order: { createdAt: 'DESC' },
+      });
+
+      if (!users.length) {
+        throw new NotFoundException('No users found with the provided query');
+      }
+
+      return users;
     } catch (error) {
       this.handleDBExceptions(error);
     }

@@ -41,6 +41,11 @@ export class UserController {
     return this.userService.getUserByDocumentNumber(documentNumber);
   }
 
+  @Get('filter')
+  async getUserByFilter(@Query() query: any) {
+    return this.userService.getUserByFilter(query);
+  }
+
   // Update a user by ID
   @Patch(':id')
   updateUser(
