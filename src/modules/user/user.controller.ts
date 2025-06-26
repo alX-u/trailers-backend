@@ -29,6 +29,11 @@ export class UserController {
     return this.userService.getUsers({ limit, offset });
   }
 
+  @Get('filter')
+  async getUserByFilter(@Query() query: any) {
+    return this.userService.getUserByFilter(query);
+  }
+
   // Get a single user by ID
 
   @Get(':id')
@@ -39,11 +44,6 @@ export class UserController {
   @Get('document/:documentNumber')
   getUserByDocumentNumber(@Param('documentNumber') documentNumber: string) {
     return this.userService.getUserByDocumentNumber(documentNumber);
-  }
-
-  @Get('filter')
-  async getUserByFilter(@Query() query: any) {
-    return this.userService.getUserByFilter(query);
   }
 
   // Update a user by ID
