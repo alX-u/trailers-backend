@@ -93,20 +93,38 @@ export class UserService {
     }
   }
 
-  async getUsers({ limit, offset }: { limit?: number; offset?: number }) {
-    // Set default values if not provided
+  async getUsers({
+    limit,
+    offset,
+    search,
+  }: {
+    limit?: number;
+    offset?: number;
+    search?: string;
+  }) {
     const take = limit ?? 10;
     const skip = offset ?? 0;
 
     try {
-      const [users, total] = await this.userRepository.findAndCount({
-        take,
-        skip,
-        order: { createdAt: 'DESC' },
-        relations: ['role', 'userStatus', 'document', 'document.documentType'],
-      });
+      const queryBuilder = this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.role', 'role')
+        .leftJoinAndSelect('user.userStatus', 'userStatus')
+        .leftJoinAndSelect('user.document', 'document')
+        .leftJoinAndSelect('document.documentType', 'documentType')
+        .orderBy('user.createdAt', 'DESC')
+        .take(take)
+        .skip(skip);
 
-      // Map users to include documentType name and abbreviation
+      if (search) {
+        queryBuilder.andWhere(
+          `(LOWER(user.firstName) LIKE :search OR LOWER(user.lastName) LIKE :search OR LOWER(user.email) LIKE :search OR LOWER(document.documentNumber) LIKE :search)`,
+          { search: `%${search.toLowerCase()}%` },
+        );
+      }
+
+      const [users, total] = await queryBuilder.getManyAndCount();
+
       const data = users.map((user) => {
         const documentType = user.document?.documentType;
         return {

@@ -25,8 +25,12 @@ export class UserController {
 
   // Get a list of users
   @Get()
-  getUsers(@Query('limit') limit?: number, @Query('offset') offset?: number) {
-    return this.userService.getUsers({ limit, offset });
+  getUsers(
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+    @Query('search') search?: string,
+  ) {
+    return this.userService.getUsers({ limit, offset, search });
   }
 
   @Get('filter')
