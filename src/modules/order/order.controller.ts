@@ -26,8 +26,16 @@ export class OrderController {
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
     @Query('userId') userId?: string,
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
   ) {
-    return this.orderService.getAllOrdersPaginated({ limit, offset, userId });
+    return this.orderService.getAllOrdersPaginated({
+      limit,
+      offset,
+      userId,
+      search,
+      showActiveOnly: showActiveOnly === 'true',
+    });
   }
 
   @Get(':id')

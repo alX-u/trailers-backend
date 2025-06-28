@@ -29,8 +29,14 @@ export class UserController {
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
     @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
   ) {
-    return this.userService.getUsers({ limit, offset, search });
+    return this.userService.getUsers({
+      limit,
+      offset,
+      search,
+      showActiveOnly: showActiveOnly === 'true',
+    });
   }
 
   @Get('filter')

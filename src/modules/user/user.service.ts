@@ -97,10 +97,12 @@ export class UserService {
     limit,
     offset,
     search,
+    showActiveOnly: showActiveOnly,
   }: {
     limit?: number;
     offset?: number;
     search?: string;
+    showActiveOnly?: boolean;
   }) {
     const take = limit ?? 10;
     const skip = offset ?? 0;
@@ -115,6 +117,11 @@ export class UserService {
         .orderBy('user.createdAt', 'DESC')
         .take(take)
         .skip(skip);
+
+      // Filtro de activos
+      if (showActiveOnly) {
+        queryBuilder.andWhere('user.active = :active', { active: true });
+      }
 
       if (search) {
         queryBuilder.andWhere(

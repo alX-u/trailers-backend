@@ -335,73 +335,124 @@ export class OrderService {
     limit,
     offset,
     userId,
+    search,
+    showActiveOnly,
   }: {
     limit?: number;
     offset?: number;
     userId?: string;
+    search?: string;
+    showActiveOnly?: boolean;
   }) {
     const take = limit ?? 10;
     const skip = offset ?? 0;
 
-    let whereClause: any = { active: true };
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.assignTo', 'assignTo')
+      .leftJoinAndSelect('assignTo.role', 'assignToRole')
+      .leftJoinAndSelect('order.client', 'client')
+      .leftJoinAndSelect('client.document', 'clientDocument')
+      .leftJoinAndSelect('clientDocument.documentType', 'clientDocumentType')
+      .leftJoinAndSelect('order.vehicule', 'vehicule')
+      .leftJoinAndSelect('vehicule.vehiculeType', 'vehiculeType')
+      .leftJoinAndSelect('order.assignedDriver', 'assignedDriver')
+      .leftJoinAndSelect('assignedDriver.document', 'assignedDriverDocument')
+      .leftJoinAndSelect(
+        'assignedDriverDocument.documentType',
+        'assignedDriverDocumentType',
+      )
+      .leftJoinAndSelect('order.orderStatus', 'orderStatus')
+      .leftJoinAndSelect('order.pricings', 'pricings')
+      .leftJoinAndSelect('pricings.pricedBy', 'pricedBy')
+      .leftJoinAndSelect('order.sparePartMaterials', 'sparePartMaterials')
+      .leftJoinAndSelect(
+        'sparePartMaterials.sparePartMaterial',
+        'sparePartMaterial',
+      )
+      .leftJoinAndSelect(
+        'sparePartMaterial.providers',
+        'sparePartMaterialProviders',
+      )
+      .leftJoinAndSelect(
+        'sparePartMaterials.selectedProvider',
+        'selectedProvider',
+      )
+      .leftJoinAndSelect(
+        'selectedProvider.document',
+        'selectedProviderDocument',
+      )
+      .leftJoinAndSelect(
+        'selectedProviderDocument.documentType',
+        'selectedProviderDocumentType',
+      )
+      .leftJoinAndSelect('order.manpowers', 'manpowers')
+      .leftJoinAndSelect('manpowers.manpower', 'manpower')
+      .leftJoinAndSelect('manpower.contractors', 'manpowerContractors')
+      .leftJoinAndSelect(
+        'manpowerContractors.document',
+        'manpowerContractorsDocument',
+      )
+      .leftJoinAndSelect(
+        'manpowerContractorsDocument.documentType',
+        'manpowerContractorsDocumentType',
+      )
+      .leftJoinAndSelect('manpowers.selectedContractor', 'selectedContractor')
+      .leftJoinAndSelect(
+        'selectedContractor.document',
+        'selectedContractorDocument',
+      )
+      .leftJoinAndSelect(
+        'selectedContractorDocument.documentType',
+        'selectedContractorDocumentType',
+      )
+      .leftJoinAndSelect('manpowers.supplies', 'manpowerSupplies')
+      .leftJoinAndSelect('manpowerSupplies.supply', 'manpowerSupply')
+      .leftJoinAndSelect('manpowerSupply.providers', 'manpowerSupplyProviders')
+      .leftJoinAndSelect(
+        'manpowerSupplies.selectedProvider',
+        'manpowerSupplySelectedProvider',
+      )
+      .leftJoinAndSelect(
+        'manpowerSupplySelectedProvider.document',
+        'manpowerSupplySelectedProviderDocument',
+      )
+      .leftJoinAndSelect(
+        'manpowerSupplySelectedProviderDocument.documentType',
+        'manpowerSupplySelectedProviderDocumentType',
+      )
+      .leftJoinAndSelect('order.billings', 'billings')
+      .leftJoinAndSelect('billings.billedBy', 'billedBy')
+      .leftJoinAndSelect('order.serviceTypes', 'serviceTypes')
+      .orderBy('order.createdAt', 'DESC')
+      .take(take)
+      .skip(skip);
 
-    // Si viene userId, filtra por rol
-    if (userId) {
-      const user = await this.userService.getUserById(userId);
-      if (
-        user &&
-        ['Colaborador', 'Mecánico', 'Contratista'].includes(user.role.name)
-      ) {
-        whereClause = {
-          ...whereClause,
-          assignTo: { idUser: userId },
-        };
-      }
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('order.active = :active', { active: true });
     }
 
-    const [orders, total] = await this.orderRepository.findAndCount({
-      where: whereClause,
-      relations: [
-        'assignTo',
-        'assignTo.role',
-        'client',
-        'client.document',
-        'client.document.documentType',
-        'vehicule',
-        'vehicule.vehiculeType',
-        'assignedDriver',
-        'assignedDriver.document',
-        'assignedDriver.document.documentType',
-        'orderStatus',
-        'pricings',
-        'pricings.pricedBy',
-        'sparePartMaterials',
-        'sparePartMaterials.sparePartMaterial.providers',
-        'sparePartMaterials.selectedProvider',
-        'sparePartMaterials.selectedProvider.document',
-        'sparePartMaterials.selectedProvider.document.documentType',
-        'manpowers',
-        'manpowers.manpower',
-        'manpowers.manpower.contractors',
-        'manpowers.manpower.contractors.document',
-        'manpowers.manpower.contractors.document.documentType',
-        'manpowers.selectedContractor',
-        'manpowers.selectedContractor.document',
-        'manpowers.selectedContractor.document.documentType',
-        'manpowers.supplies',
-        'manpowers.supplies.supply',
-        'manpowers.supplies.supply.providers',
-        'manpowers.supplies.selectedProvider',
-        'manpowers.supplies.selectedProvider.document',
-        'manpowers.supplies.selectedProvider.document.documentType',
-        'billings',
-        'billings.billedBy',
-        'serviceTypes',
-      ],
-      take,
-      skip,
-      order: { createdAt: 'DESC' },
-    });
+    // Filtro por usuario asignado (si aplica)
+    if (userId) {
+      queryBuilder.andWhere('assignTo.idUser = :userId', { userId });
+    }
+
+    // Filtro de búsqueda general
+    if (search) {
+      queryBuilder.andWhere(
+        `(
+        LOWER(client.firstName) LIKE :search OR
+        LOWER(client.lastName) LIKE :search OR
+        LOWER(orderStatus.name) LIKE :search OR
+        LOWER(order.idOrder) LIKE :search OR
+        LOWER(serviceTypes.name) LIKE :search
+      )`,
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    const [orders, total] = await queryBuilder.getManyAndCount();
 
     return { data: orders, total, limit: take, offset: skip };
   }
