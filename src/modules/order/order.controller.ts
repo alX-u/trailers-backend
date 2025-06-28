@@ -21,6 +21,17 @@ export class OrderController {
     return this.orderService.createOrder(createOrderDto);
   }
 
+  @Get('all')
+  getAllOrdersNoPagination(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+  ) {
+    return this.orderService.getAllOrdersNoPagination(
+      search,
+      showActiveOnly === 'true',
+    );
+  }
+
   @Get()
   getAllOrdersPaginated(
     @Query('limit') limit?: number,

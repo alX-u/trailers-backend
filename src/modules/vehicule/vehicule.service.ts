@@ -48,17 +48,36 @@ export class VehiculeService {
   async getVehiculesPaginated({
     limit = 10,
     offset = 0,
+    search,
+    showActiveOnly,
   }: {
     limit?: number;
     offset?: number;
+    search?: string;
+    showActiveOnly?: boolean;
   }) {
-    const [vehicules, total] = await this.vehiculeRepository.findAndCount({
-      where: { active: true },
-      relations: ['vehiculeType'],
-      take: limit,
-      skip: offset,
-      order: { createdAt: 'DESC' },
-    });
+    const queryBuilder = this.vehiculeRepository
+      .createQueryBuilder('vehicule')
+      .leftJoinAndSelect('vehicule.vehiculeType', 'vehiculeType')
+      .orderBy('vehicule.createdAt', 'DESC')
+      .take(limit)
+      .skip(offset);
+
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('vehicule.active = :active', { active: true });
+    }
+
+    // Filtro de búsqueda
+    if (search) {
+      queryBuilder.andWhere(
+        `(LOWER(vehicule.placaCabezote) LIKE :search OR LOWER(vehicule.placaTrailer) LIKE :search OR LOWER(vehiculeType.name) LIKE :search)`,
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    const [vehicules, total] = await queryBuilder.getManyAndCount();
+
     return {
       data: vehicules,
       total,

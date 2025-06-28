@@ -42,21 +42,76 @@ export class ManpowerService {
     return await this.manpowerRepository.save(manpower);
   }
 
-  async getAllManpower(filter?: string) {
-    let whereClause = {};
-    if (filter === 'Activo') {
-      whereClause = { active: true };
+  async getAllManpowersNoPagination(
+    search?: string,
+    showActiveOnly?: boolean,
+  ): Promise<Manpower[]> {
+    const queryBuilder = this.manpowerRepository
+      .createQueryBuilder('manpower')
+      .leftJoinAndSelect('manpower.contractors', 'contractors')
+      .leftJoinAndSelect('contractors.document', 'contractorDocument')
+      .leftJoinAndSelect(
+        'contractorDocument.documentType',
+        'contractorDocumentType',
+      )
+      .orderBy('manpower.createdAt', 'DESC');
+
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('manpower.active = :active', { active: true });
     }
 
-    return await this.manpowerRepository.find({
-      where: whereClause,
-      order: { createdAt: 'DESC' },
-      relations: [
-        'contractors',
-        'contractors.document',
-        'contractors.document.documentType',
-      ],
-    });
+    // Filtro de búsqueda por nombre
+    if (search) {
+      queryBuilder.andWhere('LOWER(manpower.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    return await queryBuilder.getMany();
+  }
+
+  async getAllManpower(
+    search?: string,
+    showActiveOnly?: boolean,
+    limit?: number,
+    offset?: number,
+  ): Promise<{
+    data: Manpower[];
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
+    const take = limit ?? 10;
+    const skip = offset ?? 0;
+
+    const queryBuilder = this.manpowerRepository
+      .createQueryBuilder('manpower')
+      .leftJoinAndSelect('manpower.contractors', 'contractors')
+      .leftJoinAndSelect('contractors.document', 'contractorDocument')
+      .leftJoinAndSelect(
+        'contractorDocument.documentType',
+        'contractorDocumentType',
+      )
+      .orderBy('manpower.createdAt', 'DESC')
+      .take(take)
+      .skip(skip);
+
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('manpower.active = :active', { active: true });
+    }
+
+    // Filtro de búsqueda por nombre
+    if (search) {
+      queryBuilder.andWhere('LOWER(manpower.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return { data, total, limit: take, offset: skip };
   }
 
   async getManpowerById(id: string) {

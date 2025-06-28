@@ -331,6 +331,40 @@ export class OrderService {
     }
   }
 
+  async getAllOrdersNoPagination(
+    search?: string,
+    showActiveOnly?: boolean,
+  ): Promise<Order[]> {
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.client', 'client')
+      .leftJoinAndSelect('client.document', 'clientDocument')
+      .leftJoinAndSelect('order.orderStatus', 'orderStatus')
+      .leftJoinAndSelect('order.serviceTypes', 'serviceTypes')
+      .orderBy('order.createdAt', 'DESC');
+
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('order.active = :active', { active: true });
+    }
+
+    // Filtro de búsqueda general
+    if (search) {
+      queryBuilder.andWhere(
+        `(
+        LOWER(client.firstName) LIKE :search OR
+        LOWER(client.lastName) LIKE :search OR
+        LOWER(orderStatus.name) LIKE :search OR
+        LOWER(order.idOrder) LIKE :search OR
+        LOWER(serviceTypes.name) LIKE :search
+      )`,
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    return await queryBuilder.getMany();
+  }
+
   async getAllOrdersPaginated({
     limit,
     offset,
@@ -349,80 +383,9 @@ export class OrderService {
 
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
-      .leftJoinAndSelect('order.assignTo', 'assignTo')
-      .leftJoinAndSelect('assignTo.role', 'assignToRole')
       .leftJoinAndSelect('order.client', 'client')
       .leftJoinAndSelect('client.document', 'clientDocument')
-      .leftJoinAndSelect('clientDocument.documentType', 'clientDocumentType')
-      .leftJoinAndSelect('order.vehicule', 'vehicule')
-      .leftJoinAndSelect('vehicule.vehiculeType', 'vehiculeType')
-      .leftJoinAndSelect('order.assignedDriver', 'assignedDriver')
-      .leftJoinAndSelect('assignedDriver.document', 'assignedDriverDocument')
-      .leftJoinAndSelect(
-        'assignedDriverDocument.documentType',
-        'assignedDriverDocumentType',
-      )
       .leftJoinAndSelect('order.orderStatus', 'orderStatus')
-      .leftJoinAndSelect('order.pricings', 'pricings')
-      .leftJoinAndSelect('pricings.pricedBy', 'pricedBy')
-      .leftJoinAndSelect('order.sparePartMaterials', 'sparePartMaterials')
-      .leftJoinAndSelect(
-        'sparePartMaterials.sparePartMaterial',
-        'sparePartMaterial',
-      )
-      .leftJoinAndSelect(
-        'sparePartMaterial.providers',
-        'sparePartMaterialProviders',
-      )
-      .leftJoinAndSelect(
-        'sparePartMaterials.selectedProvider',
-        'selectedProvider',
-      )
-      .leftJoinAndSelect(
-        'selectedProvider.document',
-        'selectedProviderDocument',
-      )
-      .leftJoinAndSelect(
-        'selectedProviderDocument.documentType',
-        'selectedProviderDocumentType',
-      )
-      .leftJoinAndSelect('order.manpowers', 'manpowers')
-      .leftJoinAndSelect('manpowers.manpower', 'manpower')
-      .leftJoinAndSelect('manpower.contractors', 'manpowerContractors')
-      .leftJoinAndSelect(
-        'manpowerContractors.document',
-        'manpowerContractorsDocument',
-      )
-      .leftJoinAndSelect(
-        'manpowerContractorsDocument.documentType',
-        'manpowerContractorsDocumentType',
-      )
-      .leftJoinAndSelect('manpowers.selectedContractor', 'selectedContractor')
-      .leftJoinAndSelect(
-        'selectedContractor.document',
-        'selectedContractorDocument',
-      )
-      .leftJoinAndSelect(
-        'selectedContractorDocument.documentType',
-        'selectedContractorDocumentType',
-      )
-      .leftJoinAndSelect('manpowers.supplies', 'manpowerSupplies')
-      .leftJoinAndSelect('manpowerSupplies.supply', 'manpowerSupply')
-      .leftJoinAndSelect('manpowerSupply.providers', 'manpowerSupplyProviders')
-      .leftJoinAndSelect(
-        'manpowerSupplies.selectedProvider',
-        'manpowerSupplySelectedProvider',
-      )
-      .leftJoinAndSelect(
-        'manpowerSupplySelectedProvider.document',
-        'manpowerSupplySelectedProviderDocument',
-      )
-      .leftJoinAndSelect(
-        'manpowerSupplySelectedProviderDocument.documentType',
-        'manpowerSupplySelectedProviderDocumentType',
-      )
-      .leftJoinAndSelect('order.billings', 'billings')
-      .leftJoinAndSelect('billings.billedBy', 'billedBy')
       .leftJoinAndSelect('order.serviceTypes', 'serviceTypes')
       .orderBy('order.createdAt', 'DESC')
       .take(take)

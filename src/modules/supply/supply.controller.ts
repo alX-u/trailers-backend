@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { SupplyService } from './supply.service';
 import { CreateSupplyDto } from './dto/create-supply.dto';
@@ -20,9 +21,30 @@ export class SupplyController {
     return this.supplyService.create(createSupplyDto);
   }
 
+  @Get('all')
+  findAllNoPagination(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+  ) {
+    return this.supplyService.findAllNoPagination(
+      search,
+      showActiveOnly === 'true',
+    );
+  }
+
   @Get()
-  findAll() {
-    return this.supplyService.findAll();
+  findAll(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.supplyService.findAllPaginated(
+      search,
+      showActiveOnly === 'true',
+      limit,
+      offset,
+    );
   }
 
   @Get(':id')

@@ -35,11 +35,43 @@ export class ContactsService {
     return await this.contactRepository.save(newContact);
   }
 
-  async getAllContacts(): Promise<Contact[]> {
-    return await this.contactRepository.find({
-      relations: ['client'],
-      order: { createdAt: 'DESC' },
-    });
+  async getAllContacts(
+    search?: string,
+    showActiveOnly?: boolean,
+    limit?: number,
+    offset?: number,
+  ): Promise<{
+    data: Contact[];
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
+    const take = limit ?? 10;
+    const skip = offset ?? 0;
+
+    const queryBuilder = this.contactRepository
+      .createQueryBuilder('contact')
+      .leftJoinAndSelect('contact.client', 'client')
+      .orderBy('contact.createdAt', 'DESC')
+      .take(take)
+      .skip(skip);
+
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('contact.active = :active', { active: true });
+    }
+
+    // Filtro de búsqueda
+    if (search) {
+      queryBuilder.andWhere(
+        `(LOWER(contact.name) LIKE :search OR LOWER(contact.phoneNumber) LIKE :search OR LOWER(contact.email) LIKE :search)`,
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return { data, total, limit: take, offset: skip };
   }
 
   async getContactsByClient(clientId: string): Promise<Contact[]> {

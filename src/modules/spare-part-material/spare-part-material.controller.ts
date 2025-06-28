@@ -28,9 +28,30 @@ export class SparePartMaterialController {
     );
   }
 
+  @Get('all')
+  getAllSparepartMaterialsNoPagination(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+  ) {
+    return this.sparePartMaterialService.getAllSparepartMaterialsNoPagination(
+      search,
+      showActiveOnly === 'true',
+    );
+  }
+
   @Get()
-  async getAll(@Query('filter') filter?: string) {
-    return this.sparePartMaterialService.getAllSparepartMaterials(filter);
+  async getAllSparePartMaterials(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.sparePartMaterialService.getAllSparepartMaterials(
+      search,
+      showActiveOnly === 'true',
+      limit,
+      offset,
+    );
   }
 
   @Get(':id')

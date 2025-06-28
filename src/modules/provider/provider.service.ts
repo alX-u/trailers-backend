@@ -55,17 +55,44 @@ export class ProviderService {
       throw new InternalServerErrorException('Failed to create provider');
     }
   }
-  async getProviders({ limit, offset }: { limit?: number; offset?: number }) {
+
+  async getProviders({
+    limit,
+    offset,
+    search,
+    showActiveOnly,
+  }: {
+    limit?: number;
+    offset?: number;
+    search?: string;
+    showActiveOnly?: boolean;
+  } = {}) {
     const take = limit ?? 10;
     const skip = offset ?? 0;
 
     try {
-      const [providers, total] = await this.providerRepository.findAndCount({
-        take,
-        skip,
-        order: { createdAt: 'DESC' },
-        relations: ['document', 'document.documentType'],
-      });
+      const queryBuilder = this.providerRepository
+        .createQueryBuilder('provider')
+        .leftJoinAndSelect('provider.document', 'document')
+        .leftJoinAndSelect('document.documentType', 'documentType')
+        .orderBy('provider.createdAt', 'DESC')
+        .take(take)
+        .skip(skip);
+
+      // Filtro de activos
+      if (showActiveOnly !== false) {
+        queryBuilder.andWhere('provider.active = :active', { active: true });
+      }
+
+      // Filtro de búsqueda
+      if (search) {
+        queryBuilder.andWhere(
+          `(LOWER(provider.name) LIKE :search OR LOWER(provider.email) LIKE :search OR LOWER(provider.phoneNumber) LIKE :search OR LOWER(document.documentNumber) LIKE :search)`,
+          { search: `%${search.toLowerCase()}%` },
+        );
+      }
+
+      const [providers, total] = await queryBuilder.getManyAndCount();
 
       return {
         data: providers,

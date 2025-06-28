@@ -21,9 +21,30 @@ export class ManpowerController {
     return this.manpowerService.createManpower(createManpowerDto);
   }
 
+  @Get('all')
+  getAllManpowersNoPagination(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+  ) {
+    return this.manpowerService.getAllManpowersNoPagination(
+      search,
+      showActiveOnly === 'true',
+    );
+  }
+
   @Get()
-  getAllManpower(@Query('filter') filter?: string) {
-    return this.manpowerService.getAllManpower(filter);
+  getAllManpower(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.manpowerService.getAllManpower(
+      search,
+      showActiveOnly === 'true',
+      limit,
+      offset,
+    );
   }
 
   @Get(':id')

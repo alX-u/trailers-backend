@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { DriverService } from './driver.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
@@ -21,8 +22,18 @@ export class DriverController {
   }
 
   @Get()
-  getAllDrivers() {
-    return this.driverService.getAllDrivers();
+  getAllDrivers(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.driverService.getAllDrivers({
+      search,
+      showActiveOnly: showActiveOnly === 'true',
+      limit,
+      offset,
+    });
   }
 
   @Get(':id')

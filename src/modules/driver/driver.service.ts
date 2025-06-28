@@ -31,11 +31,49 @@ export class DriverService {
     return await this.driverRepository.save(driver);
   }
 
-  async getAllDrivers() {
-    return await this.driverRepository.find({
-      where: { active: true },
-      relations: ['document', 'document.documentType'],
-    });
+  async getAllDrivers({
+    search,
+    showActiveOnly,
+    limit,
+    offset,
+  }: {
+    search?: string;
+    showActiveOnly?: boolean;
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<{
+    data: Driver[];
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
+    const take = limit ?? 10;
+    const skip = offset ?? 0;
+
+    const queryBuilder = this.driverRepository
+      .createQueryBuilder('driver')
+      .leftJoinAndSelect('driver.document', 'document')
+      .leftJoinAndSelect('document.documentType', 'documentType')
+      .orderBy('driver.createdAt', 'DESC')
+      .take(take)
+      .skip(skip);
+
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('driver.active = :active', { active: true });
+    }
+
+    // Filtro de búsqueda
+    if (search) {
+      queryBuilder.andWhere(
+        `(LOWER(driver.firstName) LIKE :search OR LOWER(driver.lastName) LIKE :search OR LOWER(driver.phoneNumber) LIKE :search OR LOWER(document.documentNumber) LIKE :search)`,
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return { data, total, limit: take, offset: skip };
   }
 
   async getDriverById(id: string) {

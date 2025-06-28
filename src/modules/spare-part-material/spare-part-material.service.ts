@@ -46,24 +46,70 @@ export class SparePartMaterialService {
     }
   }
 
-  async getAllSparepartMaterials(filter?: string) {
-    try {
-      const whereClause = filter === 'Activo' ? { active: true } : {};
+  async getAllSparepartMaterialsNoPagination(
+    search?: string,
+    showActiveOnly?: boolean,
+  ): Promise<SparePartMaterial[]> {
+    const queryBuilder = this.sparePartMaterialRepository
+      .createQueryBuilder('sparePartMaterial')
+      .leftJoinAndSelect('sparePartMaterial.providers', 'providers')
+      .orderBy('sparePartMaterial.createdAt', 'DESC');
 
-      const [items, total] =
-        await this.sparePartMaterialRepository.findAndCount({
-          where: whereClause,
-          order: { createdAt: 'DESC' },
-          relations: ['providers'],
-        });
-
-      return {
-        data: items,
-        total,
-      };
-    } catch (error) {
-      this.handleDBExceptions(error);
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('sparePartMaterial.active = :active', {
+        active: true,
+      });
     }
+
+    // Filtro de búsqueda por nombre
+    if (search) {
+      queryBuilder.andWhere('LOWER(sparePartMaterial.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    return await queryBuilder.getMany();
+  }
+
+  async getAllSparepartMaterials(
+    search?: string,
+    showActiveOnly?: boolean,
+    limit?: number,
+    offset?: number,
+  ): Promise<{
+    data: SparePartMaterial[];
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
+    const take = limit ?? 10;
+    const skip = offset ?? 0;
+
+    const queryBuilder = this.sparePartMaterialRepository
+      .createQueryBuilder('sparePartMaterial')
+      .leftJoinAndSelect('sparePartMaterial.providers', 'providers')
+      .orderBy('sparePartMaterial.createdAt', 'DESC')
+      .take(take)
+      .skip(skip);
+
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('sparePartMaterial.active = :active', {
+        active: true,
+      });
+    }
+
+    // Filtro de búsqueda por nombre
+    if (search) {
+      queryBuilder.andWhere('LOWER(sparePartMaterial.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return { data, total, limit: take, offset: skip };
   }
 
   async getSparepartMaterialById(id: string) {

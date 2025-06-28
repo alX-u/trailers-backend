@@ -24,8 +24,18 @@ export class ProviderController {
 
   //Get all providers with pagination
   @Get()
-  getProviders(@Query('limit') limit: number, @Query('offset') offset: number) {
-    return this.providerService.getProviders({ limit, offset });
+  getProviders(
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+  ) {
+    return this.providerService.getProviders({
+      limit,
+      offset,
+      search,
+      showActiveOnly: showActiveOnly === 'true',
+    });
   }
 
   //Get a provider by id

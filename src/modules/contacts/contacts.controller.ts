@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 import { CreateContactDto } from './dto/create-contact.dto';
@@ -22,8 +23,18 @@ export class ContactsController {
   }
 
   @Get()
-  getAllContacts() {
-    return this.contactsService.getAllContacts();
+  getAllContacts(
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.contactsService.getAllContacts(
+      search,
+      showActiveOnly === 'true',
+      limit,
+      offset,
+    );
   }
 
   @Get(':id')

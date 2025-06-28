@@ -34,8 +34,59 @@ export class SupplyService {
     return this.supplyRepository.save(supply);
   }
 
-  async findAll() {
-    return this.supplyRepository.find({ relations: ['providers'] });
+  async findAllNoPagination(
+    search?: string,
+    showActiveOnly?: boolean,
+  ): Promise<Supply[]> {
+    const queryBuilder = this.supplyRepository
+      .createQueryBuilder('supply')
+      .leftJoinAndSelect('supply.providers', 'providers')
+      .orderBy('supply.createdAt', 'DESC');
+
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('supply.active = :active', { active: true });
+    }
+
+    if (search) {
+      queryBuilder.andWhere('LOWER(supply.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    return await queryBuilder.getMany();
+  }
+
+  async findAllPaginated(
+    search?: string,
+    showActiveOnly?: boolean,
+    limit?: number,
+    offset?: number,
+  ): Promise<{ data: Supply[]; total: number; limit: number; offset: number }> {
+    const take = limit ?? 10;
+    const skip = offset ?? 0;
+
+    const queryBuilder = this.supplyRepository
+      .createQueryBuilder('supply')
+      .leftJoinAndSelect('supply.providers', 'providers')
+      .orderBy('supply.createdAt', 'DESC')
+      .take(take)
+      .skip(skip);
+
+    // Filtro de activos
+    if (showActiveOnly !== false) {
+      queryBuilder.andWhere('supply.active = :active', { active: true });
+    }
+
+    // Filtro de búsqueda por nombre
+    if (search) {
+      queryBuilder.andWhere('LOWER(supply.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return { data, total, limit: take, offset: skip };
   }
 
   async findOne(id: string) {

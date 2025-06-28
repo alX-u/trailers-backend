@@ -61,21 +61,40 @@ export class ClientService {
   async getClientsPaginated({
     limit,
     offset,
+    search,
+    showActiveOnly,
   }: {
     limit?: number;
     offset?: number;
+    search?: string;
+    showActiveOnly?: boolean;
   }) {
-    // Set default values if not provided
     const take = limit ?? 10;
     const skip = offset ?? 0;
 
     try {
-      const [clients, total] = await this.clientRepository.findAndCount({
-        take,
-        skip,
-        order: { createdAt: 'DESC' },
-        relations: ['document', 'document.documentType'],
-      });
+      const queryBuilder = this.clientRepository
+        .createQueryBuilder('client')
+        .leftJoinAndSelect('client.document', 'document')
+        .leftJoinAndSelect('document.documentType', 'documentType')
+        .orderBy('client.createdAt', 'DESC')
+        .take(take)
+        .skip(skip);
+
+      // Filtro de activos
+      if (showActiveOnly !== false) {
+        queryBuilder.andWhere('client.active = :active', { active: true });
+      }
+
+      // Filtro de búsqueda por nombre o número de documento
+      if (search) {
+        queryBuilder.andWhere(
+          `(LOWER(client.name) LIKE :search OR LOWER(document.documentNumber) LIKE :search)`,
+          { search: `%${search.toLowerCase()}%` },
+        );
+      }
+
+      const [clients, total] = await queryBuilder.getManyAndCount();
 
       return {
         data: clients,

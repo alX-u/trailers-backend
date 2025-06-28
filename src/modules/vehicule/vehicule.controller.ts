@@ -26,10 +26,14 @@ export class VehiculeController {
   getVehiculesPaginated(
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
   ) {
     return this.vehiculeService.getVehiculesPaginated({
-      limit: limit,
-      offset: offset,
+      limit,
+      offset,
+      search,
+      showActiveOnly: showActiveOnly === 'true',
     });
   }
 

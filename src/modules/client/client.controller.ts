@@ -26,8 +26,15 @@ export class ClientController {
   getClientsPaginated(
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
+    @Query('search') search?: string,
+    @Query('showActiveOnly') showActiveOnly?: string,
   ) {
-    return this.clientService.getClientsPaginated({ limit, offset });
+    return this.clientService.getClientsPaginated({
+      limit,
+      offset,
+      search,
+      showActiveOnly: showActiveOnly === 'true',
+    });
   }
 
   @Get(':id')
