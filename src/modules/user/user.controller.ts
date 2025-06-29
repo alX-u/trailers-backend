@@ -23,6 +23,11 @@ export class UserController {
     return this.userService.createUser(createUserDto);
   }
 
+  @Get('all')
+  async getAllUsers() {
+    return this.userService.getAllUsersNoPagination();
+  }
+
   // Get a list of users
   @Get()
   getUsers(

@@ -93,6 +93,13 @@ export class UserService {
     }
   }
 
+  async getAllUsersNoPagination(): Promise<User[]> {
+    return this.userRepository.find({
+      relations: ['role', 'userStatus', 'document', 'document.documentType'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async getUsers({
     limit,
     offset,
