@@ -387,6 +387,7 @@ export class OrderService {
       .leftJoinAndSelect('client.document', 'clientDocument')
       .leftJoinAndSelect('order.orderStatus', 'orderStatus')
       .leftJoinAndSelect('order.serviceTypes', 'serviceTypes')
+      .leftJoinAndSelect('order.assignTo', 'assignTo')
       .orderBy('order.createdAt', 'DESC')
       .take(take)
       .skip(skip);
