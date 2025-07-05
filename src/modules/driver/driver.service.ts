@@ -89,7 +89,7 @@ export class DriverService {
 
   async getDriverByDocumentNumber(documentNumber: string) {
     const driver = await this.driverRepository.findOne({
-      where: { document: { documentNumber }, active: true },
+      where: { document: { documentNumber } },
       relations: ['document', 'document.documentType'],
     });
     if (!driver) {
