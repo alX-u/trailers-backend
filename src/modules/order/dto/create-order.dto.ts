@@ -73,6 +73,7 @@ export class CreateOrderDto {
     supplies?: {
       supply?: string;
       selectedProvider?: string;
+      useDetail?: string;
       unitaryCost?: number;
       cantidad?: number;
       costoTotal?: number;

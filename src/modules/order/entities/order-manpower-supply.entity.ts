@@ -23,6 +23,9 @@ export class OrderManpowerSupply {
   selectedProvider?: Provider;
 
   @Column({ nullable: true })
+  useDetail?: string;
+
+  @Column({ nullable: true })
   unitaryCost?: number;
 
   @Column({ nullable: true })

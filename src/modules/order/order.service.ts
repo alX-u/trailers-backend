@@ -281,6 +281,7 @@ export class OrderService {
                   return queryRunner.manager.create(OrderManpowerSupply, {
                     supply: supplyEntity,
                     selectedProvider,
+                    useDetail: supplyDto.useDetail ?? null,
                     unitaryCost: supplyDto.unitaryCost ?? null,
                     cantidad: supplyDto.cantidad ?? null,
                     costoTotal: supplyDto.costoTotal ?? null,
@@ -851,6 +852,7 @@ export class OrderService {
                   return queryRunner.manager.create(OrderManpowerSupply, {
                     supply: supplyEntity,
                     selectedProvider,
+                    useDetail: supplyDto.useDetail ?? null,
                     unitaryCost: supplyDto.unitaryCost ?? null,
                     cantidad: supplyDto.cantidad ?? null,
                     costoTotal: supplyDto.costoTotal ?? null,
