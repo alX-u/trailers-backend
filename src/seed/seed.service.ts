@@ -176,6 +176,7 @@ export class SeedService {
       { name: 'Camioneta' },
       { name: 'Volqueta' },
       { name: 'Tolva' },
+      { name: 'Contenedor' },
       { name: 'Otro' },
     ];
 
