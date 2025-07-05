@@ -304,6 +304,10 @@ export class UserService {
         user.document = document;
       }
 
+      if (typeof updateUserDto.active === 'boolean') {
+        user.active = updateUserDto.active;
+      }
+
       // Save the updated user (cascades to document if needed)
       const updatedUser = await this.userRepository.save(user);
 
