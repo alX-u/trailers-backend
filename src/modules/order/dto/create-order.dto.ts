@@ -57,6 +57,7 @@ export class CreateOrderDto {
   sparePartMaterials?: {
     sparePartMaterial: string;
     selectedProvider?: string;
+    useDetail?: string;
     unitaryCost?: number;
     cantidad?: number;
     costoTotal?: number;

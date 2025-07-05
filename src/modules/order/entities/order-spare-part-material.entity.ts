@@ -26,6 +26,9 @@ export class OrderSparePartMaterial {
   unitaryCost?: number;
 
   @Column({ nullable: true })
+  useDetail?: string;
+
+  @Column({ nullable: true })
   cantidad?: number;
   @Column('float', { nullable: true })
   costoTotal?: number;

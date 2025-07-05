@@ -201,6 +201,7 @@ export class OrderService {
             return queryRunner.manager.create(OrderSparePartMaterial, {
               sparePartMaterial: spmEntity,
               selectedProvider,
+              useDetail: spmDto.useDetail ?? null,
               cantidad: spmDto.cantidad ?? null,
               costoTotal: spmDto.costoTotal ?? null,
               factorVenta: spmDto.factorVenta ?? null,
@@ -750,6 +751,7 @@ export class OrderService {
                 order,
                 sparePartMaterial: spmEntity,
                 selectedProvider,
+                useDetail: spmDto.useDetail ?? null,
                 unitaryCost: spmDto.unitaryCost ?? null,
                 cantidad: spmDto.cantidad ?? null,
                 costoTotal: spmDto.costoTotal ?? null,
