@@ -5,5 +5,5 @@ import { IsBoolean, IsOptional } from 'class-validator';
 export class UpdateContactDto extends PartialType(CreateContactDto) {
   @IsBoolean()
   @IsOptional()
-  active: boolean;
+  active?: boolean;
 }
