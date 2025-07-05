@@ -184,6 +184,10 @@ export class ClientService {
       client.name = updateClientDto.name;
     }
 
+    if (typeof updateClientDto.active === 'boolean') {
+      client.active = updateClientDto.active;
+    }
+
     // Save the updated client
     return await repo.save(client);
   }
