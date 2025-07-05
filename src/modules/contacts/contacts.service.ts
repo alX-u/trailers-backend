@@ -96,7 +96,7 @@ export class ContactsService {
   ): Promise<Contact> {
     // Find the contact by id
     const contact = await this.contactRepository.findOne({
-      where: { idContact: id, active: true },
+      where: { idContact: id },
       relations: ['client'],
     });
 
