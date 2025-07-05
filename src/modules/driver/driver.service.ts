@@ -78,7 +78,7 @@ export class DriverService {
 
   async getDriverById(id: string) {
     const driver = await this.driverRepository.findOne({
-      where: { idDriver: id, active: true },
+      where: { idDriver: id },
       relations: ['document', 'document.documentType'],
     });
     if (!driver) {
@@ -102,7 +102,7 @@ export class DriverService {
 
   async updateDriver(id: string, updateDriverDto: UpdateDriverDto) {
     const driver = await this.driverRepository.findOne({
-      where: { idDriver: id, active: true },
+      where: { idDriver: id },
       relations: ['document'],
     });
     if (!driver) {
