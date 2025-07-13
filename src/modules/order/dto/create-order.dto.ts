@@ -19,6 +19,11 @@ export class CreateOrderDto {
   @IsOptional()
   orderStatus?: string;
 
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  hoursUntilBilling?: number;
+
   @IsArray()
   @IsOptional()
   serviceTypes?: string[];

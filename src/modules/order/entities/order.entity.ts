@@ -41,6 +41,9 @@ export class Order {
   })
   orderStatus?: OrderStatus;
 
+  @Column({ name: 'hoursUntilBilling', nullable: true })
+  hoursUntilBilling?: number;
+
   @ManyToMany(() => User, (user) => user.idUser, { nullable: true })
   @JoinTable({ name: 'order_assignTo' })
   assignTo?: User[];

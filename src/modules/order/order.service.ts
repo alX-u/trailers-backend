@@ -302,6 +302,7 @@ export class OrderService {
           ? new Date(createOrderDto.outDate)
           : null,
         orderStatus: orderStatus ?? null,
+        hoursUntilBilling: createOrderDto.hoursUntilBilling ?? null,
         serviceTypes: serviceTypes.length > 0 ? serviceTypes : null,
         client: client ?? null,
         assignTo: assignTo ?? null,
@@ -497,7 +498,7 @@ export class OrderService {
   async findOrderById(id: string) {
     try {
       const order = await this.orderRepository.findOne({
-        where: { idOrder: id, active: true },
+        where: { idOrder: id },
         relations: [
           'assignTo',
           'assignTo.role',
@@ -560,9 +561,9 @@ export class OrderService {
     await queryRunner.startTransaction();
 
     try {
-      // 1. Buscar la orden existente
+      // 1. Buscar la orden
       const order = await queryRunner.manager.findOne(Order, {
-        where: { idOrder: id, active: true },
+        where: { idOrder: id },
         relations: [
           'client',
           'vehicule',
@@ -588,6 +589,9 @@ export class OrderService {
         order.total = updateOrderDto.totals ?? null;
       if ('kilometers' in updateOrderDto) {
         order.kilometers = updateOrderDto.kilometers ?? null;
+      }
+      if ('hoursUntilBilling' in updateOrderDto) {
+        order.hoursUntilBilling = updateOrderDto.hoursUntilBilling ?? null;
       }
 
       // 3. Actualizar estado de la orden (puede ser null)
