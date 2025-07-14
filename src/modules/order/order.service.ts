@@ -480,11 +480,10 @@ export class OrderService {
     if (search) {
       queryBuilder.andWhere(
         `(
-        LOWER(client.firstName) LIKE :search OR
-        LOWER(client.lastName) LIKE :search OR
+        LOWER(client.name) LIKE :search OR
         LOWER(orderStatus.name) LIKE :search OR
-        LOWER(order.idOrder) LIKE :search OR
-        LOWER(serviceTypes.name) LIKE :search
+        LOWER(serviceTypes.name) LIKE :search OR
+        LOWER(CAST(order.orderNumber AS TEXT)) LIKE :search
       )`,
         { search: `%${search.toLowerCase()}%` },
       );
