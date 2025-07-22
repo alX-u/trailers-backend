@@ -28,7 +28,7 @@ export class OrderManpowerSupply {
   @Column({ nullable: true })
   unitaryCost?: number;
 
-  @Column({ nullable: true })
+  @Column('float', { nullable: true })
   cantidad?: number;
 
   @Column('float', { nullable: true })

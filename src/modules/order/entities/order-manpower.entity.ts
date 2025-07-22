@@ -37,7 +37,7 @@ export class OrderManpower {
   @Column({ nullable: true })
   useDetail?: string;
 
-  @Column({ nullable: true })
+  @Column('float', { nullable: true })
   cantidad?: number;
 
   @Column('float', { nullable: true })

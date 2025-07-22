@@ -28,8 +28,9 @@ export class OrderSparePartMaterial {
   @Column({ nullable: true })
   useDetail?: string;
 
-  @Column({ nullable: true })
+  @Column('float', { nullable: true })
   cantidad?: number;
+
   @Column('float', { nullable: true })
   costoTotal?: number;
 
